@@ -1,7 +1,17 @@
+/*
+ * modbus.h
+ *
+ *  Created on: Oct 31, 2021
+ *      Author: kristoft
+ */
+
+#ifndef STM32_MODBUS_H_
+#define STM32_MODBUS_H_
+
 #include <stdint.h>
 
 /*Function return*/
-typedef enum 
+typedef enum
 {
   MB_OK        = 0x00U,
   MB_ERROR     = 0x01U,
@@ -24,3 +34,6 @@ struct Modbus_message_RHR_response{
 
 void Modbus_init();
 MB_StatusTypeDef Modbus_RHR(uint8_t SlaveID, uint16_t StartAddress, uint16_t NumberOfRegs);
+
+
+#endif /* STM32_MODBUS_H_ */

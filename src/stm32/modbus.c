@@ -8,7 +8,7 @@ extern UART_HandleTypeDef huart7;
 /**/
 void Modbus_init()
 {
-    //init 
+    //init
 }
 
 MB_StatusTypeDef Modbus_RHR(uint8_t SlaveID, uint16_t StartAddress, uint16_t NumberOfRegs)

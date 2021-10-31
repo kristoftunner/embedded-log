@@ -1,12 +1,18 @@
-#pragma once
+/*
+ * ili9613.h
+ *
+ *  Created on: Oct 31, 2021
+ *      Author: kristoft
+ */
+
+#ifndef STM32_ILI9163_H_
+#define STM32_ILI9163_H_
+
+
+#include "main.h"
 
 #include <stdio.h>
 #include <stdint.h>
-
-// define size
-#define ILI9163_HEIGHT 						128
-#define ILI9163_WIDTH 						160
-
 
 // ILI9163 LCD Controller Commands
 #define ILI9163_CMD_NOP                     0x00
@@ -78,14 +84,24 @@ enum Rotation{
     ROT270 = 192    // flipped landscape
 };
 
-void Init();
-void Write_Command(uint8_t cmd);
-void Write_Data(uint8_t data);
-void Write_Data16(uint16_t data);
-void Set_Address(uint16_t x1,uint16_t x2,uint16_t y1,uint16_t y2)
-void Reset();
+struct Ili_Handler{
+	enum Rotation rot;
+	uint16_t Height;
+	uint16_t Width;
+};
+void Ili9163_Init(struct Ili_Handler ili);
+void Ili9163_Write_Command(uint8_t cmd);
+void Ili9163_Write_Data(uint8_t data);
+void Ili9163_Write_Data16(uint16_t data);
+void Ili9163_Set_Address(uint16_t x1,uint16_t x2,uint16_t y1,uint16_t y2);
+void Ili9163_Reset();
+uint8_t Ili9163_Read_ID1();
+void Ili9163_Set_Rotation(enum Rotation rotation);
 
-void Draw_Pixel(uint8_t x, uint8_t y, uint16_t color);
-void Draw_Pixel(uint8_t x, uint8_t y, uint8_t size, uint16_t color);
-void Draw_Line(uint16_t x0, uint16_t y0,y uint16_t x1, uint16_t y1, uint16_t color);
-void Draw_Rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void Ili9163_Draw_Pixel(struct Ili_Handler ili, uint8_t x, uint8_t y, uint16_t color);
+void Ili9163_Draw_Pixel_Dot(uint8_t x, uint8_t y, uint8_t size, uint16_t color);
+void Ili9163_Draw_Line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
+void Ili9163_Draw_Rect(struct Ili_Handler ili, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+
+
+#endif /* STM32_ILI9163_H_ */
