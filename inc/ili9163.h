@@ -1,18 +1,27 @@
-/*
- * ili9613.h
- *
- *  Created on: Oct 31, 2021
- *      Author: kristoft
- */
-
-#ifndef STM32_ILI9163_H_
-#define STM32_ILI9163_H_
-
+#ifndef __ILI9163_H
+#define __ILI9163_H
 
 #include "main.h"
-
+#include <string.h>
 #include <stdio.h>
-#include <stdint.h>
+#include "colors.h"
+#include "fonts.h"
+
+#define ILI9163_HEIGHT 						128
+#define ILI9163_WIDTH 						160
+
+#define DISP_CS_Pin SPI_CS_Pin
+#define DISP_CS_Port SPI_CS_GPIO_Port
+
+#define DISP_DC_Pin DC_Pin
+#define DISP_DC_Port DC_GPIO_Port
+
+#define DISP_RST_Pin RST_Pin
+#define DISP_RST_Port RST_GPIO_Port
+
+#define DISP_SPI hspi1
+
+#define BUFSIZE (ILI9163_WIDTH)*(ILI9163_HEIGHT)
 
 // ILI9163 LCD Controller Commands
 #define ILI9163_CMD_NOP                     0x00
@@ -77,31 +86,23 @@
 #define ILI9163_CMD_NEGATIVE_GAMMA_CORRECT  0xE1
 #define ILI9163_CMD_GAM_R_SEL               0xF2
 
-enum Rotation{
-    ROT0 = 0,       // portrait
-    ROT90 = 96,     // landscape
-    ROT180 = 160,   // flipped portrait
-    ROT270 = 192    // flipped landscape
-};
 
-struct Ili_Handler{
-	enum Rotation rot;
-	uint16_t Height;
-	uint16_t Width;
-};
-void Ili9163_Init(struct Ili_Handler ili);
-void Ili9163_Write_Command(uint8_t cmd);
-void Ili9163_Write_Data(uint8_t data);
-void Ili9163_Write_Data16(uint16_t data);
-void Ili9163_Set_Address(uint16_t x1,uint16_t x2,uint16_t y1,uint16_t y2);
-void Ili9163_Reset();
-uint8_t Ili9163_Read_ID1();
-void Ili9163_Set_Rotation(enum Rotation rotation);
+void ILI9163_init(int rotation);
 
-void Ili9163_Draw_Pixel(struct Ili_Handler ili, uint8_t x, uint8_t y, uint16_t color);
-void Ili9163_Draw_Pixel_Dot(uint8_t x, uint8_t y, uint8_t size, uint16_t color);
-void Ili9163_Draw_Line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
-void Ili9163_Draw_Rect(struct Ili_Handler ili, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void ILI9163_newFrame();
+void ILI9163_render();
 
+void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color);
+void ILI9163_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
+void ILI9163_drawRect(uint8_t x1,uint8_t y1,uint8_t x2,uint8_t y2, uint8_t thickness, uint16_t color);
+void ILI9163_fillRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t color);
+void ILI9163_drawCircle(uint8_t centerX, uint8_t centerY, uint8_t radius, uint16_t color);
+void ILI9163_fillCircle(uint8_t centerX, uint8_t centerY, uint8_t radius, uint16_t color);
+void ILI9163_fillDisplay(uint16_t color);
 
-#endif /* STM32_ILI9163_H_ */
+void ILI9163_drawChar(uint8_t x, uint8_t y, char ch, FontDef font, uint16_t color);
+
+void ILI9163_drawString(uint8_t x, uint8_t y, FontDef font, uint16_t color, const char *string);
+void ILI9163_drawStringF(uint8_t x, uint8_t y, FontDef font, uint16_t color, char *szFormat, ...);
+
+#endif

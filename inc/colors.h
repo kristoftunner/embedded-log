@@ -1,16 +1,17 @@
+#pragma once
 
-#ifndef COLORS_H
-#define COLORS_H
+#define TRANSPARENT	0
 
-// define colors in format BGR15
-#define TRANSPARENT									0
-#define BLUE        								0xF800
-#define RED											0x001F
-#define GREEN       								0x07E0
-#define MAGENTA     								0xF81F
-#define YELLOW     									0x07FF
-#define WHITE       								0xFFFF
-#define LIGHTGREY   								0xC618
-#define BLACK       								0x0001
+#define RGB(r, b, g) (((r & 0b11111000)<<8) + ((g & 0b11111100)<<3)+(b>>3))
 
-#endif
+#define GRAY      RGB(127, 127, 127)
+#define DARKGRAY  RGB(64, 64, 64)
+#define LIGHTGRAY RGB(220, 220, 220)
+
+#define RED	      RGB(255,0,0)
+#define GREEN     RGB(0, 100, 0)
+#define BLUE      RGB(0, 0, 255)
+
+#define ORANGE    RGB(255,140,0)
+#define BLACK 	  RGB(0,0,0)
+#define WHITE	  RGB(255,255,255)
