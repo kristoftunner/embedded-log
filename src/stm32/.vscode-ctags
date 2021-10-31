@@ -1,0 +1,94 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ByteCount	modbus.h	/^    uint8_t ByteCount;$/;"	m	struct:Modbus_message_RHR_response
+CRC16	crc.c	/^unsigned short CRC16 (volatile unsigned char *puchMsg, unsigned short usDataLen ) \/* The function returns the CRC as a unsigned short type   *\/$/;"	f
+FunctionCode	modbus.h	/^    uint8_t FunctionCode;$/;"	m	struct:ModBus_message_RHR
+FunctionCode	modbus.h	/^    uint8_t FunctionCode;$/;"	m	struct:Modbus_message_RHR_response
+ILI9163_CMD_DISPLAY_INVERSION	ili9163.h	53;"	d
+ILI9163_CMD_ENTER_IDLE_MODE	ili9163.h	41;"	d
+ILI9163_CMD_ENTER_INVERT_MODE	ili9163.h	25;"	d
+ILI9163_CMD_ENTER_NORMAL_MODE	ili9163.h	23;"	d
+ILI9163_CMD_ENTER_PARTIAL_MODE	ili9163.h	22;"	d
+ILI9163_CMD_ENTER_SLEEP_MODE	ili9163.h	20;"	d
+ILI9163_CMD_EXIT_IDLE_MODE	ili9163.h	40;"	d
+ILI9163_CMD_EXIT_INVERT_MODE	ili9163.h	24;"	d
+ILI9163_CMD_EXIT_SLEEP_MODE	ili9163.h	21;"	d
+ILI9163_CMD_FRAME_RATE_CONTROL1	ili9163.h	50;"	d
+ILI9163_CMD_FRAME_RATE_CONTROL2	ili9163.h	51;"	d
+ILI9163_CMD_FRAME_RATE_CONTROL3	ili9163.h	52;"	d
+ILI9163_CMD_GAM_R_SEL	ili9163.h	69;"	d
+ILI9163_CMD_GATE_DRIVER_DIRECTION	ili9163.h	55;"	d
+ILI9163_CMD_GET_ADDRESS_MODE	ili9163.h	16;"	d
+ILI9163_CMD_GET_BLUE_CHANNEL	ili9163.h	13;"	d
+ILI9163_CMD_GET_DIAGNOSTIC_RESULT	ili9163.h	19;"	d
+ILI9163_CMD_GET_DISPLAY_MODE	ili9163.h	17;"	d
+ILI9163_CMD_GET_GREEN_CHANNEL	ili9163.h	12;"	d
+ILI9163_CMD_GET_PIXEL_FORMAT	ili9163.h	14;"	d
+ILI9163_CMD_GET_POWER_MODE	ili9163.h	15;"	d
+ILI9163_CMD_GET_RED_CHANNEL	ili9163.h	11;"	d
+ILI9163_CMD_GET_SCANLINE	ili9163.h	46;"	d
+ILI9163_CMD_GET_SIGNAL_MODE	ili9163.h	18;"	d
+ILI9163_CMD_NEGATIVE_GAMMA_CORRECT	ili9163.h	68;"	d
+ILI9163_CMD_NOP	ili9163.h	9;"	d
+ILI9163_CMD_NV_MEMORY_FUNCTION1	ili9163.h	65;"	d
+ILI9163_CMD_NV_MEMORY_FUNCTION2	ili9163.h	66;"	d
+ILI9163_CMD_POSITIVE_GAMMA_CORRECT	ili9163.h	67;"	d
+ILI9163_CMD_POWER_CONTROL1	ili9163.h	56;"	d
+ILI9163_CMD_POWER_CONTROL2	ili9163.h	57;"	d
+ILI9163_CMD_POWER_CONTROL3	ili9163.h	58;"	d
+ILI9163_CMD_POWER_CONTROL4	ili9163.h	59;"	d
+ILI9163_CMD_POWER_CONTROL5	ili9163.h	60;"	d
+ILI9163_CMD_READ_ID1	ili9163.h	47;"	d
+ILI9163_CMD_READ_ID2	ili9163.h	48;"	d
+ILI9163_CMD_READ_ID3	ili9163.h	49;"	d
+ILI9163_CMD_READ_MEMORY_CONTINUE	ili9163.h	44;"	d
+ILI9163_CMD_READ_MEMORY_START	ili9163.h	33;"	d
+ILI9163_CMD_SET_ADDRESS_MODE	ili9163.h	38;"	d
+ILI9163_CMD_SET_COLUMN_ADDRESS	ili9163.h	29;"	d
+ILI9163_CMD_SET_DISPLAY_OFF	ili9163.h	27;"	d
+ILI9163_CMD_SET_DISPLAY_ON	ili9163.h	28;"	d
+ILI9163_CMD_SET_GAMMA_CURVE	ili9163.h	26;"	d
+ILI9163_CMD_SET_PAGE_ADDRESS	ili9163.h	30;"	d
+ILI9163_CMD_SET_PARTIAL_AREA	ili9163.h	34;"	d
+ILI9163_CMD_SET_PIXEL_FORMAT	ili9163.h	42;"	d
+ILI9163_CMD_SET_SCROLL_AREA	ili9163.h	35;"	d
+ILI9163_CMD_SET_SCROLL_START	ili9163.h	39;"	d
+ILI9163_CMD_SET_TEAR_OFF	ili9163.h	36;"	d
+ILI9163_CMD_SET_TEAR_ON	ili9163.h	37;"	d
+ILI9163_CMD_SET_TEAR_SCANLINE	ili9163.h	45;"	d
+ILI9163_CMD_SOFT_RESET	ili9163.h	10;"	d
+ILI9163_CMD_SOURCE_DRIVER_DIRECTION	ili9163.h	54;"	d
+ILI9163_CMD_VCOM_CONTROL1	ili9163.h	61;"	d
+ILI9163_CMD_VCOM_CONTROL2	ili9163.h	62;"	d
+ILI9163_CMD_VCOM_OFFSET_CONTROL	ili9163.h	63;"	d
+ILI9163_CMD_WRITE_ID4_VALUE	ili9163.h	64;"	d
+ILI9163_CMD_WRITE_LUT	ili9163.h	32;"	d
+ILI9163_CMD_WRITE_MEMORY_CONTINUE	ili9163.h	43;"	d
+ILI9163_CMD_WRITE_MEMORY_START	ili9163.h	31;"	d
+ILI9163_HEIGHT	ili9163.h	4;"	d
+ILI9163_WIDTH	ili9163.h	5;"	d
+Init	ili9163.c	/^void Init()$/;"	f
+MB_ERROR	modbus.h	/^  MB_ERROR     = 0x01U,$/;"	e	enum:__anon1
+MB_OK	modbus.h	/^  MB_OK        = 0x00U,$/;"	e	enum:__anon1
+MB_StatusTypeDef	modbus.h	/^} MB_StatusTypeDef;$/;"	t	typeref:enum:__anon1
+ModBus_message_RHR	modbus.h	/^struct ModBus_message_RHR{$/;"	s
+Modbus_RHR	modbus.c	/^MB_StatusTypeDef Modbus_RHR(uint8_t SlaveID, uint16_t StartAddress, uint16_t NumberOfRegs)$/;"	f
+Modbus_init	modbus.c	/^void Modbus_init()$/;"	f
+Modbus_message_RHR_response	modbus.h	/^struct Modbus_message_RHR_response{$/;"	s
+MsgCRC	modbus.h	/^    uint16_t MsgCRC;$/;"	m	struct:ModBus_message_RHR
+NumberOfRegs	modbus.h	/^    uint16_t NumberOfRegs;$/;"	m	struct:ModBus_message_RHR
+Reset	ili9163.c	/^void Reset()$/;"	f
+Set_Address	ili9163.c	/^void Set_Address(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2)$/;"	f
+SlaveAddr	modbus.h	/^    uint8_t SlaveAddr;$/;"	m	struct:ModBus_message_RHR
+SlaveAddr	modbus.h	/^    uint8_t SlaveAddr;$/;"	m	struct:Modbus_message_RHR_response
+StartAddr	modbus.h	/^    uint16_t StartAddr;$/;"	m	struct:ModBus_message_RHR
+Write_Command	ili9163.c	/^void Write_Command(uint8_t cmd)$/;"	f
+Write_Data	ili9163.c	/^void Write_Data(uint8_t data)$/;"	f
+Write_Data16	ili9163.c	/^void Write_Data16(uint16_t data)$/;"	f
+auchCRCHi	crc.c	/^static unsigned char auchCRCHi[] = {$/;"	v	file:
+auchCRCLo	crc.c	/^static char auchCRCLo[] = {$/;"	v	file:
+payload	modbus.h	/^    uint8_t *payload;$/;"	m	struct:Modbus_message_RHR_response
