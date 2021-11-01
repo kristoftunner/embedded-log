@@ -171,19 +171,21 @@ void ILI9163_render()
 	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
-
+	SPI_DMA_FL=0;
 	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frameBuffer, BUFSIZE*2);
 
-	SPI_DMA_FL=0;
+
 	while(!SPI_DMA_FL) {} // This can be commented out if your thread sends new frames slower than SPI transmits them. Otherwise, memory havoc. See README.md
 }
 
 void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color) {
-	//if ((x < 0) || (x >= ILI9163_WIDTH) || (y < 0) || (y >= ILI9163_HEIGHT)) return;
-	//frameBuffer[((x)+(y*ILI9163_WIDTH))] = color;// >> 8;
 	if ((x < 0) || (x >= ILI9163_WIDTH) || (y < 0) || (y >= ILI9163_HEIGHT)) return;
+	frameBuffer[((x)+(y*ILI9163_WIDTH))] = color;// >> 8;
+
+	/*Without DMA:*/
+	/*if ((x < 0) || (x >= ILI9163_WIDTH) || (y < 0) || (y >= ILI9163_HEIGHT)) return;
 	ILI9163_setAddress(x, y, x + 1, y);
-	ILI9163_writeData16(color);
+	ILI9163_writeData16(color);*/
 }
 
 void ILI9163_fillRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t color)
