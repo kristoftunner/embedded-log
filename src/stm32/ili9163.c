@@ -1,26 +1,39 @@
 #include "ili9163.h"
 #include <stdio.h> // printf
 #include <stdarg.h> // va_list, va_start, va_arg, va_end
+#include "main.h"
 
 uint16_t frameBuffer[BUFSIZE] = {0};
 
 extern SPI_HandleTypeDef hspi2;
 
 /* below are extern variables in bare-metal application(not with touchGFX) and should be declared in the main functions*/
-uint8_t SPI_DMA_FL = 0;
+uint8_t SPI_DMA_BSY = 0;
 uint32_t SPI_DMA_CNT = 1;
+volatile uint8_t IsTransmittingBlock_;
 
 /* TODO: implement the callback function for the specific application:*/
 
+void touchgfxSignalVSync(void);
+
+int touchgfxDisplayDriverTransmitActive(void)
+{
+  return IsTransmittingBlock_;
+}
+
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	SPI_DMA_CNT--;
+	//touchgfxSignalVSync();
+	HAL_SPI_DMAStop(&hspi2);
+	SPI_DMA_BSY = 0;
+	IsTransmittingBlock_ = 0;
+	/*SPI_DMA_CNT--;
 	if(SPI_DMA_CNT==0)
 	{
 		HAL_SPI_DMAStop(&hspi2);
 		SPI_DMA_CNT=1;
 		SPI_DMA_FL=1;
-	}
+	}*/
 }
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
@@ -31,6 +44,11 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	__NOP();
+}
+
+uint8_t ILI9163_Transmit_Stat()
+{
+	return SPI_DMA_BSY;
 }
 
 void ILI9163_writeCommand(uint8_t address) {
@@ -197,11 +215,21 @@ void ILI9163_render()
 	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
-	//SPI_DMA_FL=0;
+	SPI_DMA_BSY=1;
 	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frameBuffer, BUFSIZE*2);
 
 
 	//while(!SPI_DMA_FL) {} // This can be commented out if your thread sends new frames slower than SPI transmits them. Otherwise, memory havoc. See README.md
+}
+
+void ILI9163_renderFb(uint8_t *framebuff)
+{
+	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
+	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
+	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
+	SPI_DMA_BSY=1;
+	IsTransmittingBlock_ = 1;
+	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)framebuff, BUFSIZE*2);
 }
 
 void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color) {
