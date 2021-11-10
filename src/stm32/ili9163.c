@@ -16,11 +16,6 @@ volatile uint8_t IsTransmittingBlock_;
 
 void touchgfxSignalVSync(void);
 
-int touchgfxDisplayDriverTransmitActive(void)
-{
-  return IsTransmittingBlock_;
-}
-
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	//touchgfxSignalVSync();
@@ -37,11 +32,6 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 }
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
-{
-	__NOP();
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	__NOP();
 }
