@@ -59,13 +59,6 @@ extern SPI_HandleTypeDef hspi2;
 	HAL_SPI_Transmit_IT(&hspi2, &data, 1);
 	Ili_Set_D();
 	return 0;
-	/*switch(HAL_SPI_Transmit(&hspi2, &data, 1, 0))
-	{
-	case HAL_OK:
-		return 0;
-	default:
-		return -1;
-	}*/
 }
 
 /*SPI wrapper function over HAL library*/
@@ -76,6 +69,5 @@ extern SPI_HandleTypeDef hspi2;
 	Ili_Reset_D();
 	temp = HAL_SPI_Receive_IT(&hspi2, data, 1);
 	Ili_Set_D();
-	//temp = HAL_SPI_Receive(&hspi2, data, 1, 100);
 	return *data;
 }

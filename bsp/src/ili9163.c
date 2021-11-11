@@ -7,28 +7,14 @@ uint16_t frameBuffer[BUFSIZE] = {0};
 
 extern SPI_HandleTypeDef hspi2;
 
-/* below are extern variables in bare-metal application(not with touchGFX) and should be declared in the main functions*/
-uint8_t SPI_DMA_BSY = 0;
-uint32_t SPI_DMA_CNT = 1;
-volatile uint8_t IsTransmittingBlock_;
-
 /* TODO: implement the callback function for the specific application:*/
 
 void touchgfxSignalVSync(void);
 
+/* Callback function from SPI DMA transfer*/
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	//touchgfxSignalVSync();
 	HAL_SPI_DMAStop(&hspi2);
-	SPI_DMA_BSY = 0;
-	IsTransmittingBlock_ = 0;
-	/*SPI_DMA_CNT--;
-	if(SPI_DMA_CNT==0)
-	{
-		HAL_SPI_DMAStop(&hspi2);
-		SPI_DMA_CNT=1;
-		SPI_DMA_FL=1;
-	}*/
 }
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
@@ -205,31 +191,21 @@ void ILI9163_render()
 	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
-	SPI_DMA_BSY=1;
 	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frameBuffer, BUFSIZE*2);
-
-
-	//while(!SPI_DMA_FL) {} // This can be commented out if your thread sends new frames slower than SPI transmits them. Otherwise, memory havoc. See README.md
 }
 
+/*render function used to render touchgfx framebuffer*/
 void ILI9163_renderFb(uint8_t *framebuff)
 {
 	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
-	SPI_DMA_BSY=1;
-	IsTransmittingBlock_ = 1;
 	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)framebuff, BUFSIZE*2);
 }
 
 void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color) {
 	if ((x < 0) || (x >= ILI9163_WIDTH) || (y < 0) || (y >= ILI9163_HEIGHT)) return;
 	frameBuffer[((x)+(y*ILI9163_WIDTH))] = color;// >> 8;
-
-	/*Without DMA:*/
-	/*if ((x < 0) || (x >= ILI9163_WIDTH) || (y < 0) || (y >= ILI9163_HEIGHT)) return;
-	ILI9163_setAddress(x, y, x + 1, y);
-	ILI9163_writeData16(color);*/
 }
 
 void ILI9163_fillRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t color)
