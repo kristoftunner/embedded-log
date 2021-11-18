@@ -12,7 +12,7 @@
 
 extern UART_HandleTypeDef huart8;
 
-int MC90_sendAT(struct MC60_cmd cmd)
+int MC60_sendAT(struct MC60_cmd cmd)
 {
 	uint8_t txBuffer[100];
 	uint8_t rxBuffer[100];
@@ -40,5 +40,85 @@ int MC90_sendAT(struct MC60_cmd cmd)
 		return 0;
 	}
 
-	return -1;
+	return 1;
+}
+
+/* helper function for constructing AT command */
+struct MC60_cmd MC60_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *writeCmd, uint8_t responseLength)
+{
+    struct MC60_cmd cmd;
+    cmd.commandType = type;
+    cmd.cmd = cmd;
+    if(cmd.commandType == write)
+    {
+        cmd.writeCmd = writeCmd;
+    }
+    cmd.responseLength = responseLength;
+
+    return cmd;
+}
+
+/* initialize MC60 for TCP/IP communcation */
+int MC60_init()
+{
+    int error = 0;
+    
+    /* check IP state */
+    struct MC60_cmd qistat = MC60_constructCmd(exec, CMD_QISTAT, "", RESP_QISTAT);
+    error |= MC60_sendAT(qistat);
+    struct MC60_cmd qifcgnt = MC60_constructCmd(write, CMD_QIFGCNT, "0", RESP_QIFGCNT);
+    error |= MC60_sendAT(qifcgnt);
+    struct MC60_cmd qicsgp = MC60_constructCmd(write, CMD_QICSGP,"1,\"APN\",\"USER\",\"PWD\"",RESP_QICSGP); //here set the APN,USER and PWD according to the SIM card
+    error |= MC60_sendAT(qicsgp);
+    /* visit single server */
+    struct MC60_cmd qimux = MC60_constructCmd(write, CMD_QIMUX, "0", RESP_QIMUX);
+    error |= MC60_sendAT(qimux);
+    /* non-transparent mode*/
+    struct MC60_cmd qimode = MC60_constructCmd(write, CMD_QIMODE, "0", RESP_QIMODE);
+    error |= MMC60_sendAT(qimode);
+    /* connect with IP address*/
+    struct MC60_cmd qidnspip = MC60_constructCmd(write, CMD_QIDNSIP, "0", RESP_QIDNSIP);
+    error |= MC60_sendAT(qidnsip);
+    /* 3: retry times to resend, 2: 200ms to wait til ack, 512: data packet size, 1: escape sequence is on*/
+    struct MC60_cmd qitcfg = MC60_constructCmd(write, CMD_QITCFG, "3,2,512,1", RESP_QITCFG);
+    error |= MC60_sendAT(qitcfg);
+    
+    return error;
+}
+
+/* connect to the server */
+int MC60_connect(const char *ip, const char *port);
+{
+    int error = 0;
+    uint8_t buffer[100];
+    strcpy(buffer,"\"TCP\",\"");
+    strcat(buffer,ip);
+    strcat(buffer, "\",");
+    strcat(buffer,port);
+    struct MC60_cmd qiopen = MC60_constructCmd(write, CMD_QIOPEN, buffer, RESP_QIOPEN);
+    /* TODO: check for connect OK needs to be implemented*/
+    error |= MC60_sendAT(qiopen);
+    
+    return error;
+}
+
+/* close connection with the server */
+int MC60_close()
+{
+    int error = 0;
+    /* check conncetion */
+    struct MC60_cmd qisrvc = MC60_constructCmd(read, CMD_QISRVC, "", RESP_QISRVC_READ);
+    error |= MC60_sendAT(qisrvc);
+    /* TODO: check if we are client in the connection */
+    struc MC60_cmd qisrvc_write = MC60_constructCmd(write, CMD_QISRVC, "1", RESP_QISRVC);
+    error |= MC60_sendAT(qisrvc_write);
+    struct MC60_cmd qideact = MC60_constructCmd(exec, CMD_QIDEACT, "", RESP_QIDEACT);
+    error |= MC60_sendAT(qideact);
+
+    return error;
+}
+
+int MC60_recv(uint8_t *data)
+{
+
 }
