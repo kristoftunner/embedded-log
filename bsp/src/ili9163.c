@@ -4,7 +4,8 @@
 #include "main.h"
 
 uint16_t frameBuffer[BUFSIZE] = {0};
-
+SPI_HandleTypeDef hspi_16bit;
+SPI_HandleTypeDef hspi_8bit;
 extern SPI_HandleTypeDef hspi2;
 
 /* TODO: implement the callback function for the specific application:*/
@@ -15,6 +16,7 @@ void touchgfxSignalVSync(void);
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	HAL_SPI_DMAStop(&hspi2);
+	HAL_SPI_DMAStop(&hspi_16bit);
 }
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
@@ -22,9 +24,17 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 	__NOP();
 }
 
-uint8_t ILI9163_Transmit_Stat()
+/* HAL SPI init for changing 8bit SPI to 16bit SPI transfer for display data send*/
+
+int ILI9163_changeSpiBitWidth(SPI_HandleTypeDef config)
 {
-	return SPI_DMA_BSY;
+
+	if (HAL_SPI_Init(&config) != HAL_OK)
+	{
+		return 1;
+	}
+
+	return 0;
 }
 
 void ILI9163_writeCommand(uint8_t address) {
@@ -180,6 +190,15 @@ void ILI9163_init(int rotation) {
 	ILI9163_writeCommand(ILI9163_CMD_WRITE_MEMORY_START);
 }
 
+/*render function used to render touchgfx framebuffer*/
+void ILI9163_renderFb(uint16_t *framebuff)
+{
+	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
+	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
+	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
+	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)framebuff, BUFSIZE*2);
+}
+
 void ILI9163_newFrame()
 {
 	for(uint32_t i= 0; i < (ILI9163_WIDTH*ILI9163_HEIGHT); i++)
@@ -192,15 +211,6 @@ void ILI9163_render()
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
 	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frameBuffer, BUFSIZE*2);
-}
-
-/*render function used to render touchgfx framebuffer*/
-void ILI9163_renderFb(uint8_t *framebuff)
-{
-	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
-	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
-	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)framebuff, BUFSIZE*2);
 }
 
 void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color) {

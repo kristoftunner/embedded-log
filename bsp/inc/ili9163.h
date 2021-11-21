@@ -91,7 +91,7 @@ void ILI9163_init(int rotation);
 
 void ILI9163_newFrame();
 void ILI9163_render();
-void ILI9163_renderFb(uint8_t *framebuff);
+void ILI9163_renderFb(uint16_t *framebuff);
 uint8_t ILI9163_Transmit_Stat();
 void ILI9163_reset();
 void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color);
