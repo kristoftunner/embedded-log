@@ -31,14 +31,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Core/stm32</name>
+			<name>BSP</name>
 			<type>2</type>
-			<location>E:/Dev/projects/work/PRJ004/software/teslactrl/src/stm32</location>
-		</link>
-		<link>
-			<name>Core/teslactrlinc</name>
-			<type>2</type>
-			<location>E:/Dev/projects/work/PRJ004/software/teslactrl/inc</location>
+			<location>D:/Dev/projects/iot/work/PRJ004/software/teslactrl/bsp</location>
 		</link>
 	</linkedResources>
 </projectDescription>

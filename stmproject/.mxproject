@@ -9,17 +9,17 @@ CDefines=USE_HAL_DRIVER;STM32F765xx;USE_HAL_DRIVER;USE_HAL_DRIVER;
 [PreviousGenFiles]
 AdvancedFolderStructure=true
 HeaderFileListSize=3
-HeaderFiles#0=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Inc/stm32f7xx_it.h
-HeaderFiles#1=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Inc/stm32f7xx_hal_conf.h
-HeaderFiles#2=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Inc/main.h
+HeaderFiles#0=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Inc/stm32f7xx_it.h
+HeaderFiles#1=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Inc/stm32f7xx_hal_conf.h
+HeaderFiles#2=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Inc/main.h
 HeaderFolderListSize=1
-HeaderPath#0=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Inc
+HeaderPath#0=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Inc
 HeaderFiles=;
 SourceFileListSize=3
-SourceFiles#0=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Src/stm32f7xx_it.c
-SourceFiles#1=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Src/stm32f7xx_hal_msp.c
-SourceFiles#2=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Src/main.c
+SourceFiles#0=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Src/stm32f7xx_it.c
+SourceFiles#1=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Src/stm32f7xx_hal_msp.c
+SourceFiles#2=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Src/main.c
 SourceFolderListSize=1
-SourcePath#0=E:/Dev/projects/work/PRJ004/software/stm32-project/Core/Src
+SourcePath#0=D:/Dev/projects/iot/work/PRJ004/software/teslactrl/stmproject/Core/Src
 SourceFiles=;
 

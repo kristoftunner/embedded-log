@@ -20,8 +20,8 @@ OBJCOPY_BIN :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+BSP/src \
 Core/Src \
 Core/Startup \
-Core/stm32 \
 Drivers/STM32F7xx_HAL_Driver/Src \
 

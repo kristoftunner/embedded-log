@@ -17,7 +17,7 @@ typedef enum
   MB_ERROR     = 0x01U,
 } MB_StatusTypeDef;
 
-struct ModBus_message_RHR{
+struct Modbus_messageRHR{
     uint8_t SlaveAddr;
     uint8_t FunctionCode;
     uint16_t StartAddr;
@@ -25,15 +25,15 @@ struct ModBus_message_RHR{
     uint16_t MsgCRC;
 };
 
-struct Modbus_message_RHR_response{
+struct Modbus_messageRHRResponse{
     uint8_t SlaveAddr;
     uint8_t FunctionCode;
     uint8_t ByteCount;
-    uint8_t *payload;
+    uint16_t *payload;
+    uint16_t crc;
 };
 
 void Modbus_init();
-MB_StatusTypeDef Modbus_RHR(uint8_t SlaveID, uint16_t StartAddress, uint16_t NumberOfRegs);
-
+MB_StatusTypeDef Modbus_RHR(uint8_t SlaveID, uint16_t StartAddress, uint16_t NumberOfRegs, struct Modbus_messageRHRResponse *response);
 
 #endif /* STM32_MODBUS_H_ */

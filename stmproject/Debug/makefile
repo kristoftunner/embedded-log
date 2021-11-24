@@ -10,9 +10,9 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include Drivers/STM32F7xx_HAL_Driver/Src/subdir.mk
--include Core/stm32/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
+-include BSP/src/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -62,8 +62,8 @@ all: main-build
 main-build: teslactrl.elf secondary-outputs
 
 # Tool invocations
-teslactrl.elf: $(OBJS) $(USER_OBJS) E:\Dev\projects\work\PRJ004\software\stm32-project\STM32F765ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "teslactrl.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"E:\Dev\projects\work\PRJ004\software\stm32-project\STM32F765ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="teslactrl.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+teslactrl.elf: $(OBJS) $(USER_OBJS) D:\Dev\projects\iot\work\PRJ004\software\teslactrl\stmproject\STM32F765ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "teslactrl.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"D:\Dev\projects\iot\work\PRJ004\software\teslactrl\stmproject\STM32F765ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="teslactrl.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
