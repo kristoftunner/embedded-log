@@ -1,0 +1,90 @@
+/*
+ * teslactrl.c
+ *
+ *  Created on: 25 Nov 2021
+ *      Author: usr_tunnerk
+ */
+
+#include "teslactrl.h"
+#include "modbus.h"
+
+/* Reading out the 80 cell voltage registers */
+int tesla_readCellVolts(uint16_t *data)
+{
+    struct Modbus_messageRHRResponse modbusMsg;
+    MB_StatusTypeDef modbusStat;
+    modbusStat = Modbus_RHR(TESLA_ADDR, MB_CELLVOLT_BASE, 80, &modbusMsg);
+    if(modbusStat == MB_ERROR)
+    {
+        return 1;
+    }
+
+    for(int i = 0; i < modbusMsg.byteCount; i++)
+    {
+        data[i] = modbusMsg.payload[i];
+    }
+
+    return 0;
+}
+
+/* Reading out the 50 cell temperature registers and saving to the input structure*/
+int tesla_readCellTemps(uint8_t *data)
+{
+    struct Modbus_messageRHRResponse modbusMsg;
+    MB_StatusTypeDef modbusStat;
+    modbusStat = Modbus_RHR(TESLA_ADDR, MB_CELLTEMP_BASE, 30, &modbusMsg);
+    if(modbusStat == MB_ERROR)
+    {
+        return 1;
+    }
+
+    for(int i = 0; i < modbusMsg.byteCount/3; i++)
+    {
+        data[i*5] = modbusMsg.payload[i] >> 8;
+        data[i*5+1] = modbusMsg.payload[i] & 0xff;
+        data[i*5+2] = modbusMsg.payload[i+1] >> 8;
+        data[i*5+3] = modbusMsg.payload[i+1] & 0xff;
+        data[i*5+4] = modbusMsg.payload[i+2] >> 8;
+    }
+
+    return 0;
+}
+
+/* Reading out the 80 cell capacity registers */
+int tesla_readCellCapacities(uint16_t *data)
+{
+    struct Modbus_messageRHRResponse modbusMsg;
+    MB_StatusTypeDef modbusStat;
+    modbusStat = Modbus_RHR(TESLA_ADDR, MB_CELLCAP_BASE, 80, &modbusMsg);
+    if(modbusStat == MB_ERROR)
+    {
+        return 1;
+    }
+
+    for(int i = 0; i < modbusMsg.byteCount; i++)
+    {
+        data[i] = modbusMsg.payload[i];
+    }
+
+    return 0;
+}
+
+/* Reading out the 16 status registers */
+int tesla_readChargerStatus(uint16_t *data)
+{
+    struct Modbus_messageRHRResponse modbusMsg;
+    MB_StatusTypeDef modbusStat;
+    modbusStat = Modbus_RHR(TESLA_ADDR, MB_STATREG_BASE, 16, &modbusMsg);
+    if(modbusStat == MB_ERROR)
+    {
+        return 1;
+    }
+
+    for(int i = 0; i < modbusMsg.byteCount; i++)
+    {
+        data[i] = modbusMsg.payload[i];
+    }
+
+    return 0;
+}
+

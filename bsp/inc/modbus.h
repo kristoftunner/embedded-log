@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+#define TESLA_ADDR 2
+
 /*Function return*/
 typedef enum
 {
@@ -18,18 +20,18 @@ typedef enum
 } MB_StatusTypeDef;
 
 struct Modbus_messageRHR{
-    uint8_t SlaveAddr;
-    uint8_t FunctionCode;
-    uint16_t StartAddr;
-    uint16_t NumberOfRegs;
-    uint16_t MsgCRC;
+    uint8_t slaveAddr;
+    uint8_t functionCode;
+    uint16_t startAddr;
+    uint16_t numberOfRegs;
+    uint16_t msgCRC;
 };
 
 struct Modbus_messageRHRResponse{
-    uint8_t SlaveAddr;
-    uint8_t FunctionCode;
-    uint8_t ByteCount;
-    uint16_t *payload;
+    uint8_t slaveAddr;
+    uint8_t functionCode;
+    uint8_t byteCount;
+    uint16_t payload[256];
     uint16_t crc;
 };
 
