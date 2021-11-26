@@ -14,6 +14,7 @@ void Modbus_init()
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+	/* Clear all the error flags for the next UART receiption */
 	rxFlag = 0;
 	__HAL_UART_CLEAR_OREFLAG(huart);
 	__HAL_UART_CLEAR_NEFLAG(huart);
