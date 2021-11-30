@@ -21,6 +21,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	__HAL_UART_DISABLE_IT(huart, UART_IT_ERR);
 	if(gHandler->port == huart)
 	{
+		gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr] = gHandler->dataRX[0];
+
 		gsm_checkMessage();
 	}
 	/*if(gHandler->port == huart)
