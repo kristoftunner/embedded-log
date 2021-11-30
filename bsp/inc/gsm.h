@@ -9,6 +9,7 @@
 #define INC_GSM_H_
 
 #include <stdint.h>
+#include "main.h"
 
 /* AT command defines 
  * RESP: size of the response in bytes
@@ -82,6 +83,20 @@
 #define RESP_QISTAT 36
 #define OK_QISTAT 12
 
+typedef enum
+{
+	IP_INITIAL,
+	IP_START,
+	IP_CONFIG,
+	IP_GRPSACT,
+	IP_STATUS,
+	TCP_CONNECTING,
+	CONNECT_OK,
+	IP_CLOSE,
+	PDP_DEACT,
+	ERROR
+}TCPIP_status;
+
 typedef enum {
 	test = 0,
 	read = 1,
@@ -89,20 +104,35 @@ typedef enum {
 	exec = 3
 }ATCommandType;
 
-struct MC60_cmd
+typedef struct
 {
 	ATCommandType commandType;
-	uint8_t *cmd;
-	uint8_t *writeCmd;
+	uint8_t cmd[256];
+	uint8_t writeCmd[256];
+	uint8_t rxBuffer[256];
 	uint16_t msgLength;
-	uint16_t responseLength;
-	uint8_t offsetOK;
+	uint16_t responeMsgNr; //number of response packets separated by \r\n
+	uint8_t packetOK; //packet number of the OK response packet
+	uint8_t dataPtr;
+}gsm_cmd;
 
-};
+typedef struct
+{
+	UART_HandleTypeDef *port;
+	uint8_t dataRX;
+	gsm_cmd cmd;
+}gsm_handler;
 
-int MC60_sendAT(struct MC60_cmd cmd);
-int MC60_connect(const char *ip, const char *port);
-int MC60_init();
-void MC60_reset();
-int MC60_close();
+
+
+
+gsm_handler *gHandler;
+
+void gsm_bufferAdd(gsm_cmd *cmd, uint8_t val);
+int gsm_checkMessage(gsm_cmd *cmd);
+int gsm_sendAT(struct MC60_cmd cmd);
+int gsm_connect(const char *ip, const char *port);
+int gsm_init();
+void gsm_reset();
+int gsm_close();
 #endif /* INC_GSM_H_ */

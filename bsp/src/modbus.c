@@ -5,35 +5,15 @@
 
 extern UART_HandleTypeDef huart7;
 
-static int rxFlag = 0;
+int rxFlag = 0;
 /**/
 void Modbus_init()
 {
     //init
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	/* Clear all the error flags for the next UART receiption */
-	rxFlag = 0;
-	__HAL_UART_CLEAR_OREFLAG(huart);
-	__HAL_UART_CLEAR_NEFLAG(huart);
-	__HAL_UART_CLEAR_FEFLAG(huart);
-	__HAL_UART_DISABLE_IT(huart, UART_IT_ERR);
-}
 
-/*void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
 
-	//HAL_UART_Receive_IT(&huart7,(uint8_t *)&rxBuffer[0], 5 + 80*2);
-}*/
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
-	__HAL_UART_CLEAR_OREFLAG(huart);
-	rxFlag = 0;
-	__NOP();
-}
 MB_StatusTypeDef Modbus_RHR(uint8_t SlaveID, uint16_t StartAddress, uint16_t NumberOfRegs, struct Modbus_messageRHRResponse *response)
 {
 	MB_StatusTypeDef ret;
