@@ -23,7 +23,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr] = gHandler->dataRX[0];
 
-		gsm_checkMessage();
+		gsm_processMessage();
 	}
 	/*if(gHandler->port == huart)
 	{

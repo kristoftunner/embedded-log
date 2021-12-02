@@ -16,8 +16,8 @@
  * OK: place of the OK in the response in bytes*/
 /* request manufacturer identification*/
 #define CMD_GMI "GMI"
-#define RESP_GMI 3
-#define OK_GMI 3
+#define RESP_GMI 4
+#define OK_GMI 4
 /* select context as foreground context*/
 #define CMD_QIFGCNT "QIFGCNT"
 #define RESP_QIFGCNT 2
@@ -88,6 +88,7 @@ typedef enum
 	IP_INITIAL,
 	IP_START,
 	IP_CONFIG,
+	IP_IND,
 	IP_GRPSACT,
 	IP_STATUS,
 	TCP_CONNECTING,
@@ -115,8 +116,10 @@ typedef struct
 	uint16_t responePacketNr; //number of response packets separated by \r\n
 	uint8_t currPacketNr;
 	uint8_t packetOK; //packet number of the OK response packet
+	uint8_t offsetOK; //OK offset in the rxBuffer
 	uint8_t dataPtr;
 	uint8_t dataReadyFlag;
+	uint8_t responseOKFlag;
 	uint8_t delimiterCntr;
 }gsm_cmd;
 
@@ -125,6 +128,7 @@ typedef struct
 	UART_HandleTypeDef *port;
 	uint8_t dataRX[2];	// valamiért az egybájtos változóval nem működött az UART recieve IT
 	gsm_cmd cmd;
+	uint8_t ipAddr[20];
 }gsm_handler;
 
 
@@ -133,10 +137,13 @@ typedef struct
 gsm_handler *gHandler;
 
 void gsm_bufferAdd(gsm_cmd *cmd, uint8_t val);
-int gsm_sendAT(struct MC60_cmd cmd);
-void gsm_checkMessage();
+int gsm_sendAT();
+void gsm_processMessage();
 int gsm_connect(const char *ip, const char *port);
 int gsm_init();
+int gsm_connect(const char *ip, const char *port);
 void gsm_reset();
 int gsm_close();
+TCPIP_status gsm_getTCPStatus();
+int gsm_getIp();
 #endif /* INC_GSM_H_ */

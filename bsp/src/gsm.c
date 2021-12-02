@@ -17,7 +17,7 @@ static uint8_t rxBuffer[256];
 
 int msgRecv = 0;
 
-void MC60_reset()
+void gsm_reset()
 {
   HAL_GPIO_WritePin(GPIOD,PWR_KEY_Pin,GPIO_PIN_SET);
   HAL_Delay(1500);
@@ -27,7 +27,7 @@ void MC60_reset()
 
 
 
-int MC60_sendAT(gsm_cmd cmd)
+int gsm_sendAT()
 {
 	HAL_StatusTypeDef stat = 0;
 
@@ -60,45 +60,67 @@ int MC60_sendAT(gsm_cmd cmd)
 	__HAL_UART_DISABLE_IT(&huart8, UART_IT_ERR);
 	uint8_t temp = (uint8_t)(huart8.Instance->RDR);
 	stat = HAL_UART_Receive_IT(&huart8, (uint8_t *)(gHandler->dataRX), 1);
+
+	/* waiting for the reception to end */
 	while(gHandler->cmd.dataReadyFlag == 0);
 
-	return 0;
+	if(gHandler->cmd.responseOKFlag)
+		return 0;
+	else
+		return 1;
 }
 
 /* 1)check rxBuffer
  * 2) if current message is ready -> stop UART reception
  * 2) if current message is not -> continue the UART reception*/
-void gsm_checkMessage()
+void gsm_processMessage()
 {
-	if(gHandler->cmd.dataPtr == gHandler->cmd.msgLength)
+	if(gHandler->cmd.dataReadyFlag == 0)
 	{
-		if(strncmp(gHandler->cmd.rxBuffer,gHandler->cmd.txBuffer, gHandler->cmd.msgLength) == 0)
-		{
-			gHandler->cmd.currPacketNr++;
-		}
-	}
-	if(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr] == '\n' && gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-1] == '\r')
-	{
-		gHandler->cmd.delimiterCntr++;
-		if(gHandler->cmd.delimiterCntr == (gHandler->cmd.responePacketNr-1)*2)
-		{
-			gHandler->cmd.dataReadyFlag = 1;
-			return;
-		}
-		else if((gHandler->cmd.delimiterCntr % 2) == 0)
-		{
-			gHandler->cmd.currPacketNr++;
-		}
-	}
 
-	gHandler->cmd.dataPtr++;
-	HAL_UART_Receive_IT(&huart8, (uint8_t *)(gHandler->dataRX), 1);
+		if(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr] == '\n' && gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-1] == '\r')
+		{
+			gHandler->cmd.delimiterCntr++;
+
+			/* check if response is OK */
+			if(gHandler->cmd.currPacketNr == gHandler->cmd.packetOK-1)
+			{
+				if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-3]),"OK",2) == 0)
+					gHandler->cmd.responseOKFlag = 1;
+			}
+
+			/* check if all the message packe recieved*/
+			if(gHandler->cmd.delimiterCntr == (gHandler->cmd.responePacketNr-1)*2)
+			{
+				gHandler->cmd.dataReadyFlag = 1;
+				return;
+			}
+			else if((gHandler->cmd.delimiterCntr % 2) == 0)
+			{
+
+				gHandler->cmd.currPacketNr++;
+			}
+		}
+
+		/* if the message sent is recieved, then the first packet is done */
+		if((gHandler->cmd.dataPtr-1) == gHandler->cmd.msgLength)
+		{
+			if(strncmp(&(gHandler->cmd.rxBuffer),&(gHandler->cmd.txBuffer), gHandler->cmd.msgLength) == 0)
+			{
+				gHandler->cmd.currPacketNr++;
+				if(strncmp(&(gHandler->cmd.cmd),"QIACT",5) == 0)
+					gHandler->cmd.dataReadyFlag = 1;
+			}
+		}
+
+		gHandler->cmd.dataPtr++;
+		HAL_UART_Receive_IT(&huart8, (uint8_t *)(gHandler->dataRX), 1);
+	}
 }
 
 /* helper function for constructing AT command */
-gsm_cmd MC60_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *writeCmd, uint8_t responsePackets, uint8_t offsetPacket)
+void gsm_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *writeCmd, uint8_t responsePackets, uint8_t offsetPacket)
 {
-    gsm_cmd cmdConstructed;
 	strcpy(gHandler->cmd.cmd,cmd);
 	strcpy(gHandler->cmd.writeCmd,writeCmd);
 	gHandler->cmd.commandType = type;
@@ -111,74 +133,153 @@ gsm_cmd MC60_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t
 	gHandler->cmd.packetOK = offsetPacket;
 	gHandler->dataRX[0] = 0;
 	gHandler->cmd.delimiterCntr = 0;
-
-    return cmdConstructed;
+	gHandler->cmd.responseOKFlag = 0;
 }
 
-/* initialize MC60 for TCP/IP communcation */
-int MC60_init()
+/* initialize gsm for TCP/IP communcation */
+int gsm_init()
 {
     int error = 0;
-//    uint8_t txbuffer0[] = "AT+QITCFG=3,2,512,1\r";
-//    HAL_UART_Transmit(&huart8, (uint8_t *)txbuffer0, sizeof(txbuffer0), 100);
-    gsm_cmd gmi = MC60_constructCmd(exec,CMD_GMI,"",RESP_GMI, OK_GMI);
-    error |= MC60_sendAT(gmi);
+    gsm_constructCmd(exec, CMD_GMI, "", RESP_GMI, OK_GMI);
+    gsm_sendAT();
     /* check IP state */
-    gsm_cmd qistat = MC60_constructCmd(exec, CMD_QISTAT, "", RESP_QISTAT, OK_QISTAT);
-    error |= MC60_sendAT(qistat);
-    gsm_cmd qifcgnt = MC60_constructCmd(write, CMD_QIFGCNT, "0", RESP_QIFGCNT, OK_QIFGCNT);
-    error |= MC60_sendAT(qifcgnt);
-    gsm_cmd qicsgp = MC60_constructCmd(write, CMD_QICSGP,"1,\"iot.1nce.net\"",RESP_QICSGP, OK_QICSGP); //here set the APN,USER and PWD according to the SIM card
-    error |= MC60_sendAT(qicsgp);
+    gsm_constructCmd(exec, CMD_QISTAT, "", RESP_QISTAT, OK_QISTAT);
+    error |= gsm_sendAT();
+    gsm_constructCmd(write, CMD_QIFGCNT, "0", RESP_QIFGCNT, OK_QIFGCNT);
+    error |= gsm_sendAT();
+    gsm_constructCmd(write, CMD_QICSGP,"1,\"iot.1nce.net\"",RESP_QICSGP, OK_QICSGP); //here set the APN,USER and PWD according to the SIM card
+    error |= gsm_sendAT();
     /* visit single server */
-    gsm_cmd qimux = MC60_constructCmd(write, CMD_QIMUX, "0", RESP_QIMUX, OK_QIMUX);
-    error |= MC60_sendAT(qimux);
+    gsm_constructCmd(write, CMD_QIMUX, "0", RESP_QIMUX, OK_QIMUX);
+    error |= gsm_sendAT();
     /* non-transparent mode*/
-    gsm_cmd qimode = MC60_constructCmd(write, CMD_QIMODE, "0", RESP_QIMODE, OK_QIMODE);
-    error |= MC60_sendAT(qimode);
+    gsm_constructCmd(write, CMD_QIMODE, "0", RESP_QIMODE, OK_QIMODE);
+    error |= gsm_sendAT();
     /* connect with IP address*/
-    gsm_cmd qidnspip = MC60_constructCmd(write, CMD_QIDNSIP, "0", RESP_QIDNSIP, OK_QIDNSIP);
-    error |= MC60_sendAT(qidnspip);
+    gsm_constructCmd(write, CMD_QIDNSIP, "0", RESP_QIDNSIP, OK_QIDNSIP);
+    error |= gsm_sendAT();
     /* 3: retry times to resend, 2: 200ms to wait til ack, 512: data packet size, 1: escape sequence is on*/
-    gsm_cmd qitcfg = MC60_constructCmd(write, CMD_QITCFG, "3,2,512,1", RESP_QITCFG, OK_QITCFG);
-    error |= MC60_sendAT(qitcfg);
+    gsm_constructCmd(write, CMD_QITCFG, "3,2,512,1", RESP_QITCFG, OK_QITCFG);
+    error |= gsm_sendAT();
     
     return error;
 }
 
+/* get IP address of the GSM module */
+int gsm_getIp()
+{
+	int error = 0;
+	gsm_constructCmd(exec, CMD_QILOCIP, "", RESP_QILOCIP, OK_QILOCIP);
+	gsm_sendAT();
+	//strcpy the ip address
+	uint16_t temp = gHandler->cmd.dataPtr - gHandler->cmd.msgLength-3;
+	strncpy(gHandler->ipAddr, &(gHandler->cmd.rxBuffer[gHandler->cmd.msgLength+2]),temp);
+
+	return 0;
+}
 /* connect to the server */
-int MC60_connect(const char *ip, const char *port)
+int gsm_connect(const char *ip, const char *port)
 {
     int error = 0;
+    gsm_getTCPStatus();
+    gsm_constructCmd(exec, CMD_QIREGAPP, "", RESP_QIREGAPP, OK_QIREGAPP);
+    error |= gsm_sendAT();
+
+    while(gsm_getTCPStatus() == IP_INITIAL);
+
+    gsm_constructCmd(exec, CMD_QIACT, "", RESP_QIACT, OK_QIACT);
+    gsm_sendAT();
+
+    while(gsm_getTCPStatus() == IP_START);
+
+    gsm_getIp();
+
+    while(gsm_getTCPStatus() == IP_GRPSACT);
+
+
+    while(gsm_getTCPStatus() == IP_STATUS);
+
     uint8_t buffer[100];
     strcpy(buffer,"\"TCP\",\"");
     strcat(buffer,ip);
     strcat(buffer, "\",");
     strcat(buffer,port);
-    gsm_cmd qiopen = MC60_constructCmd(write, CMD_QIOPEN, buffer, RESP_QIOPEN, OK_QIOPEN);
+    gsm_constructCmd(write, CMD_QIOPEN, buffer, RESP_QIOPEN, OK_QIOPEN);
     /* TODO: check for connect OK needs to be implemented*/
-    error |= MC60_sendAT(qiopen);
+    error |= gsm_sendAT();
     
     return error;
 }
 
+/* get the status of the TCPIP stack */
+TCPIP_status gsm_getTCPStatus()
+{
+	TCPIP_status stat = IP_ERROR;
+	int error = 0;
+	gsm_constructCmd(exec, CMD_QISTAT, "", RESP_QISTAT, OK_QISTAT);
+	error |= gsm_sendAT();
+
+	if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-11]),"IP INITIAL",10) == 0)
+	{
+		stat = IP_INITIAL;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-9]),"IP START",8) == 0)
+	{
+		stat = IP_START;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-10]),"IP CONFIG",9) == 0)
+	{
+		stat = IP_CONFIG;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-7]),"IP IND",6) == 0)
+	{
+		stat = IP_IND;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-11]),"IP GPRSACT",10) == 0)
+	{
+		stat = IP_GRPSACT;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-10]),"IP STATUS",9) == 0)
+	{
+		stat = IP_STATUS;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-13]),"TCP CONNECTING",14) == 0)
+	{
+		stat = TCP_CONNECTING;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-9]),"IP CLOSE",8) == 0)
+	{
+		stat = IP_CLOSE;
+	}
+	else if(strncmp(&(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-11]),"CONNECT OK",10) == 0)
+	{
+		stat = CONNECT_OK;
+	}
+	else
+	{
+		stat = IP_ERROR;
+	}
+
+	return stat;
+}
+
 /* close connection with the server */
-int MC60_close()
+int gsm_close()
 {
     int error = 0;
     /* check conncetion */
-//    struct MC60_cmd qisrvc = MC60_constructCmd(read, CMD_QISRVC, "", RESP_QISRVC_READ, OK_QISRVC_READ);
-//    error |= MC60_sendAT(qisrvc);
+//    struct gsm_cmd qisrvc = gsm_constructCmd(read, CMD_QISRVC, "", RESP_QISRVC_READ, OK_QISRVC_READ);
+//    error |= gsm_sendAT(qisrvc);
 //    /* TODO: check if we are client in the connection */
-//    struct MC60_cmd qisrvc_write = MC60_constructCmd(write, CMD_QISRVC, "1", RESP_QISRVC, OK_QISRVC);
-//    error |= MC60_sendAT(qisrvc_write);
-//    struct MC60_cmd qideact = MC60_constructCmd(exec, CMD_QIDEACT, "", RESP_QIDEACT, OK_QIDEACT);
-//    error |= MC60_sendAT(qideact);
+//    struct gsm_cmd qisrvc_write = gsm_constructCmd(write, CMD_QISRVC, "1", RESP_QISRVC, OK_QISRVC);
+//    error |= gsm_sendAT(qisrvc_write);
+//    struct gsm_cmd qideact = gsm_constructCmd(exec, CMD_QIDEACT, "", RESP_QIDEACT, OK_QIDEACT);
+//    error |= gsm_sendAT(qideact);
 
     return error;
 }
 
-int MC60_recv(uint8_t *data)
+int gsm_recv(uint8_t *data)
 {
 
 }
