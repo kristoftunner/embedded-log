@@ -10,17 +10,6 @@
 #define ILI9163_HEIGHT 						128
 #define ILI9163_WIDTH 						160
 
-#define DISP_CS_Pin SPI_CS_Pin
-#define DISP_CS_Port SPI_CS_GPIO_Port
-
-#define DISP_DC_Pin DC_Pin
-#define DISP_DC_Port DC_GPIO_Port
-
-#define DISP_RST_Pin RST_Pin
-#define DISP_RST_Port RST_GPIO_Port
-
-#define DISP_SPI hspi1
-
 #define BUFSIZE (ILI9163_WIDTH)*(ILI9163_HEIGHT)
 
 // ILI9163 LCD Controller Commands

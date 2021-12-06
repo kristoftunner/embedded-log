@@ -5,8 +5,6 @@
 #include "cmsis_os2.h"
 #include "stm32f7xx_hal_dma.h"
 
-void touchgfxSignalVSync(void);
-
 /* Callback function from SPI DMA transfer*/
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
