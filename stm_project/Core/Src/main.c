@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "gsm.h"
 #include "teslactrl.h"
+#include "ili9163.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -157,6 +158,18 @@ int main(void)
   tesla_handler tesla;
   tesla_init(&tesla);
 
+  /* Filling out ILI9163 controller specifics */
+  ili_handler ili;
+  ili.port = &hspi2;
+  ili.dma = &hdma_memtomem_dma2_stream0;
+  ili.csPort = GPIOD;
+  ili.dPort = DISPLAY_D_GPIO_Port;
+  ili.rstPort = GPIOB;
+  ili.csPin = DISPLAY_CS_Pin;
+  ili.dPin = DISPLAY_D_Pin;
+  ili.rstPin = DISPLAY_RST_Pin;
+  ILI9163_initDriver(&ili);
+  ILI9163_init(0);
   int error = 0;
   /* USER CODE END 2 */
 

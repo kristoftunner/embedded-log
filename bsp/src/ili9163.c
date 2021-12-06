@@ -5,28 +5,27 @@
 #include "cmsis_os2.h"
 #include "stm32f7xx_hal_dma.h"
 
-extern osSemaphoreId_t vsyncSphrHandle;
-uint16_t frameBuffer[BUFSIZE] = {0};
-extern SPI_HandleTypeDef hspi2;
-extern DMA_HandleTypeDef hdma_memtomem_dma2_stream0;
-uint16_t frameBuff[BUFSIZE];
-/* TODO: implement the callback function for the specific application:*/
-
 void touchgfxSignalVSync(void);
 
 /* Callback function from SPI DMA transfer*/
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	HAL_SPI_DMAStop(&hspi2);
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
-//	osSemaphoreRelease(vsyncSphrHandle);
+	HAL_SPI_DMAStop(iHandler->port);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 1);
+	//HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 1);
 }
 
+/* Error callback just in case.. */
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
 	__NOP();
 }
 
+/* DMA callback: 
+* transfering data from touchgfx buffer to driver buffer 
+* have to swap the two bytes because the SPI DMA sends the frame data
+* in little-endian format
+*/
 static void ILI9163_DMA_Callback(DMA_HandleTypeDef *DmaHandle)
 {
 	for(int row = 0; row < ILI9163_HEIGHT; row++)
@@ -34,47 +33,63 @@ static void ILI9163_DMA_Callback(DMA_HandleTypeDef *DmaHandle)
 		for(int col = 0; col < ILI9163_WIDTH; col++)
 		{
 			uint16_t temp;
-			temp = frameBuff[row*ILI9163_WIDTH + col];
-			frameBuff[row*ILI9163_WIDTH + col] = (temp >> 8) | (temp << 8);
+			temp = iHandler->frameBuff[row*ILI9163_WIDTH + col];
+			iHandler->frameBuff[row*ILI9163_WIDTH + col] = (temp >> 8) | (temp << 8);
 		}
 	}
-	ILI9163_renderFb(&frameBuff);
+	ILI9163_renderFb(&(iHandler->frameBuff));
 }
 
+/* Init the handler structure */
+void ILI9163_initDriver(ili_handler *handler)
+{
+	iHandler = handler;
+	for(int i = 0; i <sizeof(iHandler->frameBuff)/sizeof(iHandler->frameBuff[0]); i++)
+	{
+		iHandler->frameBuff[i] = 0;
+	}
+	HAL_DMA_RegisterCallback(iHandler->dma, HAL_DMA_XFER_CPLT_CB_ID, ILI9163_DMA_Callback);
+}
+
+/* Start transferring data from touchgfx framebuffer to driver framebuffer*/
 void ILI9163_getFrameBuffer(uint8_t *src)
 {
 	HAL_StatusTypeDef stat = 0;
-	stat = HAL_DMA_Start_IT(&hdma_memtomem_dma2_stream0, (uint32_t)src, (uint32_t)&frameBuff, sizeof(frameBuff));
+	stat = HAL_DMA_Start_IT(iHandler->dma, (uint32_t)src, (uint32_t)&(iHandler->frameBuff), sizeof(iHandler->frameBuff));
 }
 
+/* Send command to the ILI9163 chip */
 void ILI9163_writeCommand(uint8_t address) {
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
-	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 0);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 0);
+	HAL_GPIO_WritePin(iHandler->dPort, iHandler->dPin, 0);
 
-	HAL_SPI_Transmit(&hspi2, &address, 1, 10);
+	HAL_SPI_Transmit(iHandler->port, &address, 1, 10);
 
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 1);
 }
 
+/* Send 8bit data/parameter of the command */
 void ILI9163_writeData(uint8_t data) {
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
-	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 0);
+	HAL_GPIO_WritePin(iHandler->dPort, iHandler->dPin, 1);
 
-	HAL_SPI_Transmit(&hspi2, &data, 1, 10);
+	HAL_SPI_Transmit(iHandler->port, &data, 1, 10);
 
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 1);
 }
 
+/* Send 16bit data/parameter of the command */
 void ILI9163_writeData16(uint16_t word) {
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
-	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 0);
+	HAL_GPIO_WritePin(iHandler->dPort, iHandler->dPin, 1);
 
 	uint8_t data [2] = {(word >> 8) & 0x00FF, word & 0x00FF};
-	HAL_SPI_Transmit(&hspi2, data, 2, 10);
+	HAL_SPI_Transmit(iHandler->port, data, 2, 10);
 
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 1);
 }
 
+/* set ILI9163 gram end and begin adresses of the next display refreshing*/
 void ILI9163_setAddress(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
 	ILI9163_writeCommand(ILI9163_CMD_SET_COLUMN_ADDRESS);
 	ILI9163_writeData16(x1);
@@ -87,18 +102,20 @@ void ILI9163_setAddress(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
 	ILI9163_writeCommand(ILI9163_CMD_WRITE_MEMORY_START);
 }
 
+/* Reset the chip */
 void ILI9163_reset(void)
 {
-	HAL_GPIO_WritePin(GPIOB, DISPLAY_RST_Pin, 0);
+	HAL_GPIO_WritePin(iHandler->rstPort, iHandler->rstPin, 0);
 	HAL_Delay(50);
 
-	HAL_GPIO_WritePin(GPIOB, DISPLAY_RST_Pin, 1);
+	HAL_GPIO_WritePin(iHandler->rstPort, iHandler->rstPin, 1);
 	HAL_Delay(100);
 }
 
+/* Initialization of the ILI9163 chip */
 void ILI9163_init(int rotation) {
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
-	HAL_GPIO_WritePin(GPIOB, DISPLAY_RST_Pin, 1);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 1);
+	HAL_GPIO_WritePin(iHandler->rstPort, iHandler->rstPin, 1);
 
 	ILI9163_reset(); // Hardware reset the LCD
 
@@ -199,185 +216,13 @@ void ILI9163_init(int rotation) {
 	ILI9163_writeCommand(ILI9163_CMD_SET_DISPLAY_ON);
 	ILI9163_writeCommand(ILI9163_CMD_WRITE_MEMORY_START);
 
-	HAL_DMA_RegisterCallback(&hdma_memtomem_dma2_stream0, HAL_DMA_XFER_CPLT_CB_ID, ILI9163_DMA_Callback);
 }
 
-/*render function used to render touchgfx framebuffer*/
+/* render function used to render touchgfx framebuffer */
 void ILI9163_renderFb(uint16_t *framebuff)
 {
 	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
-	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
-	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)framebuff, BUFSIZE*2);
-}
-
-void ILI9163_newFrame()
-{
-	for(uint32_t i= 0; i < (ILI9163_WIDTH*ILI9163_HEIGHT); i++)
-		frameBuffer[i] = 0xFFFF;
-}
-
-void ILI9163_render()
-{
-	ILI9163_setAddress(0, 0, ILI9163_WIDTH, ILI9163_HEIGHT);
-	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
-	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
-	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frameBuffer, BUFSIZE*2);
-}
-
-void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color) {
-	if ((x < 0) || (x >= ILI9163_WIDTH) || (y < 0) || (y >= ILI9163_HEIGHT)) return;
-	frameBuffer[((x)+(y*ILI9163_WIDTH))] = color;// >> 8;
-}
-
-void ILI9163_fillRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t color)
-{
-	for(uint8_t x = x1; x < x2; x++)
-		for(uint8_t y = y1; y < y2; y++)
-			ILI9163_drawPixel(x, y, color);
-}
-
-void ILI9163_drawRect(uint8_t x1,uint8_t y1,uint8_t x2,uint8_t y2, uint8_t thickness, uint16_t color) {
-	ILI9163_fillRect(x1, y1, x2, y1+thickness, color);
-	ILI9163_fillRect(x1, y2-thickness, x2, y2, color);
-
-	ILI9163_fillRect(x1, y1, x1+thickness, y2, color);
-	ILI9163_fillRect(x2-thickness, y1, x2, y2, color);
-}
-
-void ILI9163_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color) {
-	uint16_t dy = y1 - y0;
-	uint16_t dx = x1 - x0;
-	uint16_t stepx, stepy;
-
-	if (dy < 0) {
-		dy = -dy; stepy = -1;
-	}
-	else stepy = 1;
-
-	if (dx < 0) {
-		dx = -dx; stepx = -1;
-	}
-	else stepx = 1;
-
-	dy <<= 1;
-	dx <<= 1;
-
-	ILI9163_drawPixel(x0, y0, color);
-
-	if (dx > dy) {
-		int fraction = dy - (dx >> 1);
-		while (x0 != x1) {
-			if (fraction >= 0) {
-				y0 += stepy;
-				fraction -= dx;
-			}
-
-			x0 += stepx;
-			fraction += dy;
-			ILI9163_drawPixel(x0, y0, color);
-		}
-	} else {
-		int fraction = dx - (dy >> 1);
-		while (y0 != y1) {
-			if (fraction >= 0) {
-				x0 += stepx;
-				fraction -= dy;
-			}
-
-			y0 += stepy;
-			fraction += dx;
-			ILI9163_drawPixel(x0, y0, color);
-		}
-	}
-}
-
-
-void ILI9163_fillCircle(uint8_t centerX, uint8_t centerY, uint8_t radius, uint16_t color) {
-	for(int y=-radius; y<=radius; y++)
-		for(int x=-radius; x<=radius; x++)
-			if(x*x+y*y <= radius*radius)
-				ILI9163_drawPixel(centerX+x, centerY+y, color);
-}
-
-void ILI9163_drawCircle(uint8_t centerX, uint8_t centerY, uint8_t radius, uint16_t color) { // From the Adafruit GFX library
-	radius--; // inner outline
-	int16_t f = 1 - radius;
-	int16_t ddF_x = 1;
-	int16_t ddF_y = -2 * radius;
-	int16_t x = 0;
-	int16_t y = radius;
-
-	ILI9163_drawPixel(centerX, centerY + radius, color);
-	ILI9163_drawPixel(centerX, centerY - radius, color);
-	ILI9163_drawPixel(centerX + radius, centerY, color);
-	ILI9163_drawPixel(centerX - radius, centerY, color);
-
-	while (x < y) {
-		if (f >= 0) {
-			y--;
-			ddF_y += 2;
-			f += ddF_y;
-		}
-		x++;
-		ddF_x += 2;
-		f += ddF_x;
-
-		ILI9163_drawPixel(centerX + x, centerY + y, color);
-		ILI9163_drawPixel(centerX - x, centerY + y, color);
-		ILI9163_drawPixel(centerX + x, centerY - y, color);
-		ILI9163_drawPixel(centerX - x, centerY - y, color);
-		ILI9163_drawPixel(centerX + y, centerY + x, color);
-		ILI9163_drawPixel(centerX - y, centerY + x, color);
-		ILI9163_drawPixel(centerX + y, centerY - x, color);
-		ILI9163_drawPixel(centerX - y, centerY - x, color);
-	}
-}
-
-void ILI9163_fillDisplay(uint16_t color) {
-	ILI9163_fillRect(0,0, ILI9163_WIDTH, ILI9163_HEIGHT, color);
-}
-
-void ILI9163_drawChar(uint8_t x, uint8_t y, char ch, FontDef font, uint16_t color) {
-	uint16_t i, b, j;
-	for(i = 0; i < font.height; i++) {
-		b = font.data[(ch - 32) * font.height + i];
-		for(j = 0; j < font.width; j++) {
-			if((b << j) & 0x8000)  {
-				ILI9163_drawPixel(x + j, y + i, color);
-			}
-		}
-	}
-}
-
-void ILI9163_drawString(uint8_t x, uint8_t y, FontDef font, uint16_t color, const char *string) {
-	while(*string) {
-		if(x + font.width >= ILI9163_WIDTH) {
-			x = 0;
-			y += font.height;
-			if(y + font.height >= ILI9163_HEIGHT)
-				break;
-
-			if(*string == ' ') {
-				// skip spaces in the beginning of the new line
-				string++;
-				continue;
-			}
-		}
-
-		ILI9163_drawChar(x, y, *string, font, color);
-
-		x += font.width;
-		string++;
-	}
-}
-
-void ILI9163_drawStringF(uint8_t x, uint8_t y, FontDef font, uint16_t color, char *szFormat, ...) {
-	char szBuffer[64];
-	va_list pArgs;
-	va_start(pArgs, szFormat);
-	vsnprintf(szBuffer, 63, szFormat, pArgs);
-	va_end(pArgs);
-
-	ILI9163_drawString(x, y, font, color, szBuffer);
+	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 0);
+	HAL_GPIO_WritePin(iHandler->dPort, iHandler->dPin, 1);
+	HAL_SPI_Transmit_DMA(iHandler->port, (uint8_t*)framebuff, BUFSIZE*2);
 }

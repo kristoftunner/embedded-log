@@ -86,24 +86,26 @@
 #define ILI9163_CMD_NEGATIVE_GAMMA_CORRECT  0xE1
 #define ILI9163_CMD_GAM_R_SEL               0xF2
 
+typedef struct{
+    SPI_HandleTypeDef *port;
+    DMA_HandleTypeDef *dma;
+    uint16_t frameBuff[BUFSIZE];
+    GPIO_TypeDef *csPort;
+    GPIO_TypeDef *dPort;
+    GPIO_TypeDef *rstPort;
+    uint16_t csPin;
+    uint16_t dPin;
+    uint16_t rstPin;
+}ili_handler;
 
+ili_handler *iHandler;
+
+void ILI9163_InitDriver(ili_handler *handler);
 void ILI9163_init(int rotation);
-
-void ILI9163_newFrame();
 void ILI9163_render();
 void ILI9163_renderFb(uint16_t *framebuff);
 uint8_t ILI9163_Transmit_Stat();
 void ILI9163_reset();
 void ILI9163_getFrameBuffer(uint8_t *src);
-void ILI9163_drawPixel(uint8_t x, uint8_t y, uint16_t color);
-void ILI9163_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
-void ILI9163_drawRect(uint8_t x1,uint8_t y1,uint8_t x2,uint8_t y2, uint8_t thickness, uint16_t color);
-void ILI9163_fillRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t color);
-void ILI9163_drawCircle(uint8_t centerX, uint8_t centerY, uint8_t radius, uint16_t color);
-void ILI9163_fillCircle(uint8_t centerX, uint8_t centerY, uint8_t radius, uint16_t color);
-void ILI9163_fillDisplay(uint16_t color);
-void ILI9163_drawChar(uint8_t x, uint8_t y, char ch, FontDef font, uint16_t color);
-void ILI9163_drawString(uint8_t x, uint8_t y, FontDef font, uint16_t color, const char *string);
-void ILI9163_drawStringF(uint8_t x, uint8_t y, FontDef font, uint16_t color, char *szFormat, ...);
 
 #endif
