@@ -10,7 +10,7 @@
 #include "app.h"
 
 extern "C" osMessageQueueId_t guiQueueHandle;
-extern "C" app_state state;
+extern "C" app_state appState;
 
 Model::Model() : modelListener(0)
 {
@@ -23,7 +23,7 @@ void Model::tick()
 	stat = osMessageQueueGet(guiQueueHandle, &temp, 0, 0);
 	if(stat == osOK)
 	{
-		switch(state)
+		switch(appState)
 		{
 		case state_cellCapacityDisplay:
 			modelListener->setNewValue(temp.cellCapacities[0]);

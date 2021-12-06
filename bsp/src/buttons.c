@@ -7,7 +7,7 @@
 #include "main.h"
 #include "stm32f7xx_hal_gpio.h"
 #include "app.h"
-#include "main.h"
+#include "buttons.h"
 #include "cmsis_os2.h"
 
 /* 1 - left
@@ -16,18 +16,14 @@
  * 4 - right
  * 5 - down*/
 
-uint8_t buttonState = 0;
-extern osSemaphoreId_t buttonSemHandle;
+/* idk why but cannot declare this in app.h->linker error:multiple declaration */
+app_state appState = state_cellCapacityDisplay;
 
-static enum positions{
-	left = 1,
-	up = 2,
-	center = 3,
-	right = 4,
-	down = 5
-};
-
-app_state state = state_cellCapacityDisplay;
+void buttonsInit(button_handler *handler)
+{
+	bHandler = handler;
+	bHandler->buttonState = 0;
+}
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 {
@@ -41,30 +37,30 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 	{
 
 		case GPIO_PIN_11:
-			buttonState = left;
-			if(state != state_debugDisplay)
+			bHandler->buttonState = left;
+			if(appState != state_debugDisplay)
 			{
-				state++;
+				appState++;
 			}
 			break;
 		case GPIO_PIN_12:
-			buttonState = up;
+			bHandler->buttonState = up;
 			break;
 		case GPIO_PIN_14:
-			buttonState = center;
+			bHandler->buttonState = center;
 			break;
 		case GPIO_PIN_15:
-			buttonState = right;
-			if(state != state_cellCapacityDisplay)
+			bHandler->buttonState = right;
+			if(appState != state_cellCapacityDisplay)
 			{
-				state--;
+				appState--;
 			}
 			break;
 		case GPIO_PIN_0:
-			buttonState = down;
+			bHandler->buttonState = down;
 			break;
 		default:
-			buttonState = 0;
+			bHandler->buttonState = 0;
 	}
 }
 

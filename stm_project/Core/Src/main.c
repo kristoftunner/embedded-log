@@ -27,6 +27,7 @@
 #include "gsm.h"
 #include "teslactrl.h"
 #include "ili9163.h"
+#include "buttons.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -86,11 +87,6 @@ const osMessageQueueAttr_t guiQueue_attributes = {
 osTimerId_t buttonTimmerHandle;
 const osTimerAttr_t buttonTimmer_attributes = {
   .name = "buttonTimmer"
-};
-/* Definitions for vsyncSphr */
-osSemaphoreId_t vsyncSphrHandle;
-const osSemaphoreAttr_t vsyncSphr_attributes = {
-  .name = "vsyncSphr"
 };
 /* USER CODE BEGIN PV */
 
@@ -170,6 +166,12 @@ int main(void)
   ili.rstPin = DISPLAY_RST_Pin;
   ILI9163_initDriver(&ili);
   ILI9163_init(0);
+
+  /* Button controller init */
+  button_handler buttons;
+  buttons.antiGlitchTimer = buttonTimmerHandle;
+  buttonsInit(&buttons);
+
   int error = 0;
   /* USER CODE END 2 */
 
@@ -179,10 +181,6 @@ int main(void)
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
-
-  /* Create the semaphores(s) */
-  /* creation of vsyncSphr */
-  vsyncSphrHandle = osSemaphoreNew(1, 1, &vsyncSphr_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
