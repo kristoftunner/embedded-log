@@ -6,6 +6,9 @@
  */
 #include "main.h"
 #include "stm32f7xx_hal_gpio.h"
+#include "app.h"
+#include "main.h"
+#include "cmsis_os2.h"
 
 /* 1 - left
  * 2 - up
@@ -14,6 +17,7 @@
  * 5 - down*/
 
 uint8_t buttonState = 0;
+extern osSemaphoreId_t buttonSemHandle;
 
 static enum positions{
 	left = 1,
@@ -23,6 +27,8 @@ static enum positions{
 	down = 5
 };
 
+app_state state = state_cellCapacityDisplay;
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 {
   /* PIN_11 - BTN_5 - Sch: Left(B1)
@@ -30,10 +36,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
    * PIN_14 - BTN_3 - Sch: Center(B4)
    * PIN_15 - BTN_1 - Sch: Right(B6)
    * PIN_0 - BTN_4 - Sch: Down(B5) */
+
 	switch(GPIO_pin)
 	{
+
 		case GPIO_PIN_11:
 			buttonState = left;
+			if(state != state_debugDisplay)
+			{
+				state++;
+			}
 			break;
 		case GPIO_PIN_12:
 			buttonState = up;
@@ -43,6 +55,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 			break;
 		case GPIO_PIN_15:
 			buttonState = right;
+			if(state != state_cellCapacityDisplay)
+			{
+				state--;
+			}
 			break;
 		case GPIO_PIN_0:
 			buttonState = down;

@@ -9,6 +9,8 @@
 #include <NectiveButtonController.hpp>
 #include <main.h>
 #include <touchgfx/hal/HAL.hpp>
+#include "cmsis_os2.h"
+
 
 extern "C"{
 	extern uint8_t buttonState;
@@ -24,6 +26,7 @@ bool NectiveButtonController::sample(uint8_t& key)
 	if(buttonState)
 	{
 		key = buttonState - 1;
+		buttonState = 0;
 		return true;
 	}
 

@@ -8,6 +8,25 @@
 #include "teslactrl.h"
 #include "modbus.h"
 
+/* Initializing all the tesla handler structs */
+void tesla_init(tesla_handler *handler)
+{
+	tHandler = handler;
+
+    for(int i = 0; i <sizeof(tHandler->cellVoltages)/sizeof(tHandler->cellVoltages[0]); i++)
+    {
+        tHandler->cellVoltages[i] = i;
+        tHandler->cellVoltages[i] = i;
+    }
+    for(int i = 0; i < sizeof(tHandler->cellTemps)/sizeof(tHandler->cellTemps[0]); i++)
+    {
+        tHandler->cellTemps[i] = i;
+    }
+    for(int i = 0; i < sizeof(tHandler->chargerStats) / sizeof(tHandler->chargerStats); i++)
+    {
+        tHandler->chargerStats[i] = i;
+    }
+}
 /* Reading out the 80 cell voltage registers */
 int tesla_readCellVolts(uint16_t *data)
 {
@@ -21,7 +40,7 @@ int tesla_readCellVolts(uint16_t *data)
 
     for(int i = 0; i < modbusMsg.byteCount; i++)
     {
-        data[i] = modbusMsg.payload[i];
+        tHandler->cellVoltages[i] = modbusMsg.payload[i];
     }
 
     return 0;
@@ -40,11 +59,11 @@ int tesla_readCellTemps(uint8_t *data)
 
     for(int i = 0; i < modbusMsg.byteCount/3; i++)
     {
-        data[i*5] = modbusMsg.payload[i] >> 8;
-        data[i*5+1] = modbusMsg.payload[i] & 0xff;
-        data[i*5+2] = modbusMsg.payload[i+1] >> 8;
-        data[i*5+3] = modbusMsg.payload[i+1] & 0xff;
-        data[i*5+4] = modbusMsg.payload[i+2] >> 8;
+        tHandler->cellCapacities[i*5] = modbusMsg.payload[i] >> 8;
+        tHandler->cellCapacities[i*5+1] = modbusMsg.payload[i] & 0xff;
+        tHandler->cellCapacities[i*5+2] = modbusMsg.payload[i+1] >> 8;
+        tHandler->cellCapacities[i*5+3] = modbusMsg.payload[i+1] & 0xff;
+        tHandler->cellCapacities[i*5+4] = modbusMsg.payload[i+2] >> 8;
     }
 
     return 0;
@@ -63,7 +82,7 @@ int tesla_readCellCapacities(uint16_t *data)
 
     for(int i = 0; i < modbusMsg.byteCount; i++)
     {
-        data[i] = modbusMsg.payload[i];
+        tHandler->cellCapacities[i] = modbusMsg.payload[i];
     }
 
     return 0;

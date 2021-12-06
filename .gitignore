@@ -50,3 +50,57 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# STM32 debug and release generated files
+stm_project/Drivers/*
+stm_project/Debug/*
+stm_project/Release/*
+
+# STM32 Middlewares
+stm_project/Middlewares
+#stm_project/Middlewares/*/*
+#stm_project/Middlewares/*/*/*
+#stm_project/Middlewares/*/*/*/*
+#stm_project/Middlewares/*/*/*/*/*
+#stm_project/Middlewares/*/*/*/*/*/*
+#stm_project/Middlewares/*/*/*/*/*/*/*
+
+# Touchgfx gitignore files
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# application specific
+generated
+*.sdf
+*.suo
+*.user
+*.opensdf
+
+# folders
+stm_project/TouchGFX/app/tutorials/temperature_control_v*/build

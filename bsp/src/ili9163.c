@@ -2,12 +2,14 @@
 #include <stdio.h> // printf
 #include <stdarg.h> // va_list, va_start, va_arg, va_end
 #include "main.h"
+#include "cmsis_os2.h"
+#include "stm32f7xx_hal_dma.h"
 
+extern osSemaphoreId_t vsyncSphrHandle;
 uint16_t frameBuffer[BUFSIZE] = {0};
-SPI_HandleTypeDef hspi_16bit;
-SPI_HandleTypeDef hspi_8bit;
 extern SPI_HandleTypeDef hspi2;
-
+extern DMA_HandleTypeDef hdma_memtomem_dma2_stream0;
+uint16_t frameBuff[BUFSIZE];
 /* TODO: implement the callback function for the specific application:*/
 
 void touchgfxSignalVSync(void);
@@ -16,7 +18,8 @@ void touchgfxSignalVSync(void);
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	HAL_SPI_DMAStop(&hspi2);
-	HAL_SPI_DMAStop(&hspi_16bit);
+	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
+//	osSemaphoreRelease(vsyncSphrHandle);
 }
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
@@ -24,24 +27,31 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 	__NOP();
 }
 
-/* HAL SPI init for changing 8bit SPI to 16bit SPI transfer for display data send*/
-
-int ILI9163_changeSpiBitWidth(SPI_HandleTypeDef config)
+static void ILI9163_DMA_Callback(DMA_HandleTypeDef *DmaHandle)
 {
-
-	if (HAL_SPI_Init(&config) != HAL_OK)
+	for(int row = 0; row < ILI9163_HEIGHT; row++)
 	{
-		return 1;
+		for(int col = 0; col < ILI9163_WIDTH; col++)
+		{
+			uint16_t temp;
+			temp = frameBuff[row*ILI9163_WIDTH + col];
+			frameBuff[row*ILI9163_WIDTH + col] = (temp >> 8) | (temp << 8);
+		}
 	}
+	ILI9163_renderFb(&frameBuff);
+}
 
-	return 0;
+void ILI9163_getFrameBuffer(uint8_t *src)
+{
+	HAL_StatusTypeDef stat = 0;
+	stat = HAL_DMA_Start_IT(&hdma_memtomem_dma2_stream0, (uint32_t)src, (uint32_t)&frameBuff, sizeof(frameBuff));
 }
 
 void ILI9163_writeCommand(uint8_t address) {
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 0);
 
-	HAL_SPI_Transmit(&hspi2, &address, 1, 0);
+	HAL_SPI_Transmit(&hspi2, &address, 1, 10);
 
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
 }
@@ -50,7 +60,7 @@ void ILI9163_writeData(uint8_t data) {
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 0);
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
 
-	HAL_SPI_Transmit(&hspi2, &data, 1, 0);
+	HAL_SPI_Transmit(&hspi2, &data, 1, 10);
 
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
 }
@@ -60,7 +70,7 @@ void ILI9163_writeData16(uint16_t word) {
 	HAL_GPIO_WritePin(DISPLAY_D_GPIO_Port, DISPLAY_D_Pin, 1);
 
 	uint8_t data [2] = {(word >> 8) & 0x00FF, word & 0x00FF};
-	HAL_SPI_Transmit(&hspi2, data, 2, 0);
+	HAL_SPI_Transmit(&hspi2, data, 2, 10);
 
 	HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, 1);
 }
@@ -181,13 +191,15 @@ void ILI9163_init(int rotation) {
 
 	ILI9163_writeCommand(ILI9163_CMD_SET_ADDRESS_MODE);
 	if(rotation)
-		ILI9163_writeData(0x80 | 0x20 | 0x08);
+		ILI9163_writeData(0x80 | 0x20);
 	else
-		ILI9163_writeData(0x40 | 0x20 | 0x08);
+		ILI9163_writeData(0x40 | 0x20);
 
 	ILI9163_writeCommand(ILI9163_CMD_ENTER_NORMAL_MODE);
 	ILI9163_writeCommand(ILI9163_CMD_SET_DISPLAY_ON);
 	ILI9163_writeCommand(ILI9163_CMD_WRITE_MEMORY_START);
+
+	HAL_DMA_RegisterCallback(&hdma_memtomem_dma2_stream0, HAL_DMA_XFER_CPLT_CB_ID, ILI9163_DMA_Callback);
 }
 
 /*render function used to render touchgfx framebuffer*/

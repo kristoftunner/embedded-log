@@ -1,0 +1,22 @@
+
+{
+  "Application": {
+    "Name": "teslactrl",
+    "TouchGfxPath": "../Middlewares/ST/touchgfx",
+    "AvailableColorDepths": [ 16 ],
+    "AvailableLCDs":
+    {
+      "16": "LCD16bpp"
+    },
+    "AvailableResolutions" : [
+      {
+        "Width": 160,
+        "Height": 128
+      }
+    ],
+    "PostGenerateTargetCommand" : "touchgfx update_project --project-file=../teslactrl.ioc --platform=m7",
+    "Family" : "STM32F7",
+    "SubFamily" : "STM32F7x5"
+  },
+  "Version": "4.18.0"
+}

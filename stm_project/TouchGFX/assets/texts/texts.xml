@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextDatabase xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="texts.xsd" Version="4.18.0">
+  <Texts>
+    <Text Id="__SingleUse_8O6N" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Voltage: &lt;value&gt;V</Translation>
+    </Text>
+    <Text Id="__SingleUse_E1GN" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">harmadik</Translation>
+    </Text>
+    <Text Id="__SingleUse_SIIC" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">capacity: &lt;value&gt;v</Translation>
+    </Text>
+    <Text Id="__SingleUse_SFBN" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">0</Translation>
+    </Text>
+    <Text Id="__SingleUse_TYFD" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">0</Translation>
+    </Text>
+    <Text Id="__SingleUse_PB9T" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Capacity display</Translation>
+    </Text>
+    <Text Id="__SingleUse_9MOK" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Voltage display</Translation>
+    </Text>
+    <Text Id="__SingleUse_GVI3" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Temperature display</Translation>
+    </Text>
+  </Texts>
+  <Typographies>
+    <Typography Id="Default" Font="verdana.ttf" Size="14" Bpp="4" FallbackCharacter="?" WildcardCharacters="." WildcardCharacterRanges="0-9" />
+    <Typography Id="Large" Font="verdana.ttf" Size="40" Bpp="4" FallbackCharacter="?" />
+    <Typography Id="Small" Font="verdana.ttf" Size="10" Bpp="4" FallbackCharacter="?" />
+  </Typographies>
+</TextDatabase>

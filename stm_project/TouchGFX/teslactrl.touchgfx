@@ -1,0 +1,235 @@
+{
+  "Application": {
+    "Screens": [
+      {
+        "Name": "Screen1",
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "box1",
+            "Width": 160,
+            "Height": 128,
+            "Color": {
+              "Red": 255
+            },
+            "Alpha": 249
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 29,
+            "Y": 64,
+            "Width": 143,
+            "Height": 25,
+            "TextId": "__SingleUse_SIIC",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 2
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_SFBN",
+              "UseBuffer": true,
+              "BufferSize": 4
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1_1",
+            "X": 22,
+            "Y": 7,
+            "Width": 117,
+            "Height": 25,
+            "TextId": "__SingleUse_PB9T",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 2
+            }
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerPhysicalButtonClicked",
+              "ButtonKey": 3
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionNone",
+              "ActionComponent": "Screen2"
+            }
+          }
+        ]
+      },
+      {
+        "Name": "Screen2",
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "box1",
+            "Width": 160,
+            "Height": 128,
+            "Color": {
+              "Green": 255
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 42,
+            "Y": 55,
+            "Width": 82,
+            "Height": 18,
+            "TextId": "__SingleUse_8O6N",
+            "TextRotation": "0",
+            "Color": {
+              "Blue": 2
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_TYFD",
+              "UseBuffer": true,
+              "BufferSize": 4
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1_1",
+            "X": 22,
+            "Y": 7,
+            "Width": 117,
+            "Height": 25,
+            "TextId": "__SingleUse_9MOK",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 2
+            }
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerPhysicalButtonClicked"
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionNone",
+              "ActionComponent": "Screen1"
+            }
+          },
+          {
+            "InteractionName": "Interaction2",
+            "Trigger": {
+              "Type": "TriggerPhysicalButtonClicked",
+              "ButtonKey": 3
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionNone",
+              "ActionComponent": "Screen3"
+            }
+          }
+        ]
+      },
+      {
+        "Name": "Screen3",
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "box1",
+            "Width": 160,
+            "Height": 128,
+            "Color": {
+              "Blue": 255
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 33,
+            "Y": 52,
+            "Width": 66,
+            "Height": 18,
+            "TextId": "__SingleUse_E1GN",
+            "TextRotation": "0",
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1_1",
+            "X": 6,
+            "Y": 8,
+            "Width": 149,
+            "Height": 21,
+            "TextId": "__SingleUse_GVI3",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 2
+            }
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerPhysicalButtonClicked"
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionNone",
+              "ActionComponent": "Screen2"
+            }
+          }
+        ]
+      }
+    ],
+    "CustomContainerDefinitions": [],
+    "Name": "MyApplication",
+    "Resolution": {
+      "Width": 160,
+      "Height": 128
+    },
+    "SelectedColorDepth": 16,
+    "StartupScreenName": "Screen1",
+    "SelectedStartupLanguage": "GB",
+    "Skin": "Dark",
+    "TouchGfxPath": "../Middlewares/ST/touchgfx",
+    "UIPath": ".",
+    "AvailableColorDepths": [
+      16
+    ],
+    "AvailableLCDs": {
+      "16": "LCD16bpp"
+    },
+    "AvailableSections": [
+      "ExtFlashSection",
+      "IntFlashSection"
+    ],
+    "AvailableResolutions": [
+      {
+        "Width": 160,
+        "Height": 128
+      }
+    ],
+    "PhysicalButtons": [],
+    "FrameworkFeatures": {
+      "LCD16bpp": {
+        "Id": "LCD16bpp",
+        "IsEnabled": true
+      }
+    },
+    "GenerateAssetsCommand": "make -f simulator/gcc/Makefile assets -j8",
+    "PostGenerateCommand": "touchgfx update_project --project-file=simulator/msvs/Application.vcxproj",
+    "PostGenerateTargetCommand": "touchgfx update_project --project-file=../teslactrl.ioc --platform=m7",
+    "CompileSimulatorCommand": "make -f simulator/gcc/Makefile -j8",
+    "RunSimulatorCommand": "build\\bin\\simulator.exe",
+    "LandscapeSkinX": 0,
+    "LandscapeSkinY": 0,
+    "PortraitSkinX": 0,
+    "PortraitSkinY": 0,
+    "DisplayOrientation": "Landscape",
+    "Family": "STM32F7"
+  },
+  "Version": "4.18.0"
+}
