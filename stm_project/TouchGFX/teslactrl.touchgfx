@@ -10,15 +10,16 @@
             "Width": 160,
             "Height": 128,
             "Color": {
-              "Red": 255
+              "Red": 97,
+              "Green": 129,
+              "Blue": 143
             },
             "Alpha": 249
           },
           {
             "Type": "TextArea",
             "Name": "textArea1",
-            "X": 29,
-            "Y": 64,
+            "Y": 47,
             "Width": 143,
             "Height": 25,
             "TextId": "__SingleUse_SIIC",
@@ -35,14 +36,50 @@
           {
             "Type": "TextArea",
             "Name": "textArea1_1",
-            "X": 22,
-            "Y": 7,
-            "Width": 117,
+            "Y": 22,
+            "Width": 131,
             "Height": 25,
             "TextId": "__SingleUse_PB9T",
             "TextRotation": "0",
             "Color": {
               "Red": 2
+            }
+          },
+          {
+            "Type": "Image",
+            "Name": "image1",
+            "Width": 63,
+            "Height": 16,
+            "RelativeFilename": "g72.png"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea2",
+            "Y": 72,
+            "Width": 131,
+            "Height": 18,
+            "TextId": "__SingleUse_0GTI",
+            "TextRotation": "0",
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_16JM",
+              "UseBuffer": true,
+              "BufferSize": 4
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea2_1",
+            "Y": 97,
+            "Width": 108,
+            "Height": 18,
+            "TextId": "__SingleUse_UTDS",
+            "TextRotation": "0",
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_YDI1",
+              "UseBuffer": true,
+              "BufferSize": 4
             }
           }
         ],

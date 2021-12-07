@@ -25,15 +25,15 @@ void Model::tick()
 	{
 		switch(appState)
 		{
-		case state_cellCapacityDisplay:
+		case state_cellStatusDisplay:
 			modelListener->setNewValue(temp.cellCapacities[0]);
 			break;
-		case state_cellTempDisplay:
+		/*case state_cellTempDisplay:
 			modelListener->setNewValue(temp.cellTemps[0]);
 			break;
 		case state_cellVoltageDisplay:
 			modelListener->setNewValue(temp.cellVoltages[0]);
-			break;
+			break;*/
 		case state_chargerStatDisplay:
 			modelListener->setNewValue(temp.chargerStats[secChargerDcCurr]);
 			break;

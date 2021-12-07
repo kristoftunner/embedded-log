@@ -10,9 +10,7 @@
 
 
 typedef enum {
-	state_cellCapacityDisplay,
-	state_cellVoltageDisplay,
-	state_cellTempDisplay,
+	state_cellStatusDisplay,
 	state_chargerStatDisplay,
 	state_debugDisplay
 }app_state;

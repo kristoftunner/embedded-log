@@ -51,6 +51,7 @@ CRC_HandleTypeDef hcrc;
 SPI_HandleTypeDef hspi2;
 DMA_HandleTypeDef hdma_spi2_tx;
 
+TIM_HandleTypeDef htim11;
 TIM_HandleTypeDef htim13;
 
 UART_HandleTypeDef huart7;
@@ -101,6 +102,7 @@ static void MX_UART8_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_CRC_Init(void);
 static void MX_TIM13_Init(void);
+static void MX_TIM11_Init(void);
 void StartDefaultTask(void *argument);
 void StartTouchGFX(void *argument);
 void StartqueueRecv(void *argument);
@@ -149,6 +151,7 @@ int main(void)
   MX_SPI2_Init();
   MX_CRC_Init();
   MX_TIM13_Init();
+  MX_TIM11_Init();
   MX_TouchGFX_Init();
   /* USER CODE BEGIN 2 */
   tesla_handler tesla;
@@ -169,7 +172,7 @@ int main(void)
 
   /* Button controller init */
   button_handler buttons;
-  buttons.antiGlitchTimer = buttonTimmerHandle;
+  buttons.antiGlitchTimer = &htim11;
   buttonsInit(&buttons);
 
   int error = 0;
@@ -342,7 +345,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -356,6 +359,37 @@ static void MX_SPI2_Init(void)
   /* USER CODE BEGIN SPI2_Init 2 */
 
   /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
+  * @brief TIM11 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM11_Init(void)
+{
+
+  /* USER CODE BEGIN TIM11_Init 0 */
+
+  /* USER CODE END TIM11_Init 0 */
+
+  /* USER CODE BEGIN TIM11_Init 1 */
+
+  /* USER CODE END TIM11_Init 1 */
+  htim11.Instance = TIM11;
+  htim11.Init.Prescaler = 6399;
+  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim11.Init.Period = 4999;
+  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM11_Init 2 */
+
+  /* USER CODE END TIM11_Init 2 */
 
 }
 
@@ -617,7 +651,7 @@ void StartDefaultTask(void *argument)
 		}
 		for(int i = 0; i < sizeof(tHandler->cellVoltages) / sizeof(tHandler->cellVoltages[0]); i++)
 		{
-			tHandler->cellTemps[i] = val;
+			tHandler->cellVoltages[i] = val;
 		}
 		for(int i = 0; i < sizeof(tHandler->chargerStats) / sizeof(tHandler->chargerStats[0]); i++)
 		{
@@ -702,6 +736,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		touchgfxSignalVSync();
 //	  }
   	  HAL_GPIO_TogglePin(LIFE_LED_GPIO_Port, LIFE_LED_Pin);
+  }
+
+  if(htim->Instance == TIM11)
+  {
+	  bHandler->timerFlag = 0;
+	  HAL_TIM_Base_Stop_IT(bHandler->antiGlitchTimer);
   }
   /* USER CODE END Callback 1 */
 }

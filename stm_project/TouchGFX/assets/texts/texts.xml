@@ -8,7 +8,7 @@
       <Translation Language="GB">harmadik</Translation>
     </Text>
     <Text Id="__SingleUse_SIIC" TypographyId="Default" Alignment="Left" Direction="LTR">
-      <Translation Language="GB">capacity: &lt;value&gt;v</Translation>
+      <Translation Language="GB">Kapacitás: &lt;value&gt;%</Translation>
     </Text>
     <Text Id="__SingleUse_SFBN" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">0</Translation>
@@ -16,8 +16,8 @@
     <Text Id="__SingleUse_TYFD" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">0</Translation>
     </Text>
-    <Text Id="__SingleUse_PB9T" TypographyId="Default" Alignment="Left" Direction="LTR">
-      <Translation Language="GB">Capacity display</Translation>
+    <Text Id="__SingleUse_PB9T" TypographyId="Large" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Cella állapotok:</Translation>
     </Text>
     <Text Id="__SingleUse_9MOK" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">Voltage display</Translation>
@@ -25,10 +25,22 @@
     <Text Id="__SingleUse_GVI3" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">Temperature display</Translation>
     </Text>
+    <Text Id="__SingleUse_0GTI" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Hőmérséklet: &lt;value&gt; °C</Translation>
+    </Text>
+    <Text Id="__SingleUse_16JM" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">0</Translation>
+    </Text>
+    <Text Id="__SingleUse_UTDS" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Feszültség: &lt;value&gt; V</Translation>
+    </Text>
+    <Text Id="__SingleUse_YDI1" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">0</Translation>
+    </Text>
   </Texts>
   <Typographies>
     <Typography Id="Default" Font="verdana.ttf" Size="14" Bpp="4" FallbackCharacter="?" WildcardCharacters="." WildcardCharacterRanges="0-9" />
-    <Typography Id="Large" Font="verdana.ttf" Size="40" Bpp="4" FallbackCharacter="?" />
-    <Typography Id="Small" Font="verdana.ttf" Size="10" Bpp="4" FallbackCharacter="?" />
+    <Typography Id="Large" Font="verdana.ttf" Size="17" Bpp="4" FallbackCharacter="?" WildcardCharacters="." WildcardCharacterRanges="0-9" />
+    <Typography Id="Small" Font="verdana.ttf" Size="10" Bpp="4" FallbackCharacter="?" WildcardCharacters="." WildcardCharacterRanges="0-9" />
   </Typographies>
 </TextDatabase>

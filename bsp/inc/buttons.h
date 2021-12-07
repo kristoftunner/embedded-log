@@ -22,7 +22,8 @@ enum positions{
 
 typedef struct
 {
-	osTimerId_t antiGlitchTimer;
+	TIM_HandleTypeDef *antiGlitchTimer;
+	uint8_t timerFlag;
 	uint8_t buttonState;
 }button_handler;
 
