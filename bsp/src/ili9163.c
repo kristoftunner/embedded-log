@@ -63,6 +63,7 @@ void ILI9163_writeCommand(uint8_t address) {
 
 	HAL_SPI_Transmit(iHandler->port, &address, 1, 10);
 
+	HAL_GPIO_WritePin(iHandler->dPort, iHandler->dPin, 1);
 	HAL_GPIO_WritePin(iHandler->csPort, iHandler->csPin, 1);
 }
 

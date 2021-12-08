@@ -62,21 +62,21 @@ DMA_HandleTypeDef hdma_memtomem_dma2_stream0;
 osThreadId_t hardwareTaskHandle;
 const osThreadAttr_t hardwareTask_attributes = {
   .name = "hardwareTask",
-  .stack_size = 256 * 4,
+  .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for touchGFXTask */
 osThreadId_t touchGFXTaskHandle;
 const osThreadAttr_t touchGFXTask_attributes = {
   .name = "touchGFXTask",
-  .stack_size = 8192 * 4,
+  .stack_size = 10240 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for queueRecvTask */
 osThreadId_t queueRecvTaskHandle;
 const osThreadAttr_t queueRecvTask_attributes = {
   .name = "queueRecvTask",
-  .stack_size = 1024 * 4,
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for guiQueue */
@@ -199,7 +199,7 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of guiQueue */
-  guiQueueHandle = osMessageQueueNew (16, sizeof(tesla), &guiQueue_attributes);
+  guiQueueHandle = osMessageQueueNew (10, sizeof(tesla), &guiQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */

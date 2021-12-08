@@ -19,23 +19,16 @@ Model::Model() : modelListener(0)
 void Model::tick()
 {
 	tesla_handler temp;
-	osStatus_t stat;
+	osStatus_t stat = osOK;
 	stat = osMessageQueueGet(guiQueueHandle, &temp, 0, 0);
 	if(stat == osOK)
 	{
 		switch(appState)
 		{
 		case state_cellStatusDisplay:
-			modelListener->setNewValue(temp.cellCapacities[0]);
+			modelListener->setCellStatus(temp.cellTemps[0], temp.cellCapacities[0], temp.cellVoltages[0]);
 			break;
-		/*case state_cellTempDisplay:
-			modelListener->setNewValue(temp.cellTemps[0]);
-			break;
-		case state_cellVoltageDisplay:
-			modelListener->setNewValue(temp.cellVoltages[0]);
-			break;*/
 		case state_chargerStatDisplay:
-			modelListener->setNewValue(temp.chargerStats[secChargerDcCurr]);
 			break;
 		}
 	}

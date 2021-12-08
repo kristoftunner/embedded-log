@@ -161,25 +161,7 @@ void TouchGFXHAL::enableLCDControllerInterrupt()
 void TouchGFXHAL::copyFrameBufferBlockToLCD(const touchgfx::Rect rect)
 {
     uint16_t* ptr;
-
-    // Use default implementation (CPU copy!).
-    // This can be accelerated using regular DMA hardware
-
-	//ptr = getClientFrameBuffer() + rect.x + (height + rect.y)  * BSP_LCD_GetXSize();
-
 	ptr = getClientFrameBuffer();
-	int width,height;
-	height = rect.height;
-	width = rect.width;
-	/*for(int row = 0; row < height; row++)
-	{
-		for(int col = 0; col < width; col++)
-		{
-			uint16_t temp;
-			temp = *(ptr + row*width + col);
-			*(ptr + row*width + col) = (temp >> 8) | (temp << 8);
-		}
-	}*/
 	ILI9163_getFrameBuffer((uint8_t *)ptr);
 //	ILI9163_renderFb(ptr);
 }

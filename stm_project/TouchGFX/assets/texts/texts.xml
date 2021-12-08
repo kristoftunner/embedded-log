@@ -7,12 +7,6 @@
     <Text Id="__SingleUse_E1GN" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">harmadik</Translation>
     </Text>
-    <Text Id="__SingleUse_SIIC" TypographyId="Default" Alignment="Left" Direction="LTR">
-      <Translation Language="GB">Kapacitás: &lt;value&gt;%</Translation>
-    </Text>
-    <Text Id="__SingleUse_SFBN" TypographyId="Default" Alignment="Left" Direction="LTR">
-      <Translation Language="GB">0</Translation>
-    </Text>
     <Text Id="__SingleUse_TYFD" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">0</Translation>
     </Text>
@@ -36,6 +30,15 @@
     </Text>
     <Text Id="__SingleUse_YDI1" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">0</Translation>
+    </Text>
+    <Text Id="__SingleUse_FD9C" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">Capacitás: &lt;value&gt;%</Translation>
+    </Text>
+    <Text Id="__SingleUse_3Z7L" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">0</Translation>
+    </Text>
+    <Text Id="ResourceId1" TypographyId="Default" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">asd</Translation>
     </Text>
   </Texts>
   <Typographies>

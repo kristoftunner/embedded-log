@@ -12,7 +12,8 @@ public:
     virtual void setupScreen();
     virtual void tearDownScreen();
 
-    void updateVal(unsigned int newValue);
+    void updateCellStatus(unsigned int temp, unsigned int capacity, unsigned int voltage);
+
 protected:
 };
 

@@ -43,9 +43,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 				bHandler->timerFlag = 1;
 				HAL_TIM_Base_Start_IT(bHandler->antiGlitchTimer);
 				bHandler->buttonState = left;
-				if(appState != state_debugDisplay)
+				if(appState != state_cellStatusDisplay)
 				{
-					appState++;
+					appState--;
 				}
 			}
 			break;
@@ -71,9 +71,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 				bHandler->timerFlag = 1;
 				HAL_TIM_Base_Start_IT(bHandler->antiGlitchTimer);
 				bHandler->buttonState = right;
-				if(appState != state_cellStatusDisplay)
+				if(appState != state_debugDisplay)
 				{
-					appState--;
+					appState++;
 				}
 			}
 			break;
