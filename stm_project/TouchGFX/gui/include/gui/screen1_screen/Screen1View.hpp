@@ -12,7 +12,7 @@ public:
     virtual void setupScreen();
     virtual void tearDownScreen();
 
-    void updateCellStatus(unsigned int temp, unsigned int capacity, unsigned int voltage);
+    void updateCellStatus(unsigned int temperature, unsigned int capacity, unsigned int voltage, unsigned int cellIndex);
 
 protected:
 };

@@ -11,7 +11,7 @@
       <Translation Language="GB">0</Translation>
     </Text>
     <Text Id="__SingleUse_PB9T" TypographyId="Large" Alignment="Left" Direction="LTR">
-      <Translation Language="GB">Cella állapotok:</Translation>
+      <Translation Language="GB">&lt;value&gt;. cella státusz:</Translation>
     </Text>
     <Text Id="__SingleUse_9MOK" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">Voltage display</Translation>
@@ -39,6 +39,9 @@
     </Text>
     <Text Id="ResourceId1" TypographyId="Default" Alignment="Left" Direction="LTR">
       <Translation Language="GB">asd</Translation>
+    </Text>
+    <Text Id="__SingleUse_2VI2" TypographyId="Large" Alignment="Left" Direction="LTR">
+      <Translation Language="GB">0</Translation>
     </Text>
   </Texts>
   <Typographies>

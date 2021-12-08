@@ -28,6 +28,7 @@
 #include "teslactrl.h"
 #include "ili9163.h"
 #include "buttons.h"
+#include "app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -170,6 +171,10 @@ int main(void)
   ILI9163_initDriver(&ili);
   ILI9163_init(0);
 
+  app_handler app;
+  app.appState = state_cellStatusDisplay;
+  app.cellNumber = 0;
+  aHandler = &app;
   /* Button controller init */
   button_handler buttons;
   buttons.antiGlitchTimer = &htim11;
@@ -380,7 +385,7 @@ static void MX_TIM11_Init(void)
   htim11.Instance = TIM11;
   htim11.Init.Prescaler = 6399;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 4999;
+  htim11.Init.Period = 3999;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
@@ -638,26 +643,27 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   uint16_t val = 0;
+  osStatus_t stat;
   /* Infinite loop */
 	while(1)
 	{
 		for(int i = 0; i < sizeof(tHandler->cellCapacities) / sizeof(tHandler->cellCapacities[0]); i++)
 		{
-			tHandler->cellCapacities[i] = val;
+			tHandler->cellCapacities[i] = i;
 		}
 		for(int i = 0; i < sizeof(tHandler->cellTemps) / sizeof(tHandler->cellTemps[0]); i++)
 		{
-			tHandler->cellTemps[i] = val;
+			tHandler->cellTemps[i] = i;
 		}
 		for(int i = 0; i < sizeof(tHandler->cellVoltages) / sizeof(tHandler->cellVoltages[0]); i++)
 		{
-			tHandler->cellVoltages[i] = val;
+			tHandler->cellVoltages[i] = i;
 		}
 		for(int i = 0; i < sizeof(tHandler->chargerStats) / sizeof(tHandler->chargerStats[0]); i++)
 		{
-			tHandler->chargerStats[i] = val;
+			tHandler->chargerStats[i] = i;
 		}
-		osMessageQueuePut(guiQueueHandle, tHandler, 0, 0);
+		stat = osMessageQueuePut(guiQueueHandle, tHandler, 0, 0);
 		val++;
 		osDelay(1000);
 	}

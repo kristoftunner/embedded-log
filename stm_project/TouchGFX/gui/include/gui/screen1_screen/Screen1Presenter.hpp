@@ -27,7 +27,7 @@ public:
 
     virtual ~Screen1Presenter() {};
 
-    void setCellStatus(unsigned int temp, unsigned int capacity, unsigned int voltage);
+    void setCellStatus(unsigned int temperature, unsigned int capacity, unsigned int voltage, unsigned int cellIndex);
 
 private:
     Screen1Presenter();

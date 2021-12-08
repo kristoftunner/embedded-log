@@ -15,7 +15,7 @@ public:
         model = m;
     }
 
-    virtual void setCellStatus(unsigned int temp, unsigned int capacity, unsigned int voltage){};
+    virtual void setCellStatus(unsigned int temp, unsigned int capacity, unsigned int voltage, unsigned int cellIndex){};
 protected:
     Model* model;
 };

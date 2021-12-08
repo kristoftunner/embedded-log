@@ -17,8 +17,8 @@ void Screen1Presenter::deactivate()
 
 }
 
-void Screen1Presenter::setCellStatus(unsigned int temp, unsigned int capacity, unsigned int voltage)
+void Screen1Presenter::setCellStatus(unsigned int temperature, unsigned int capacity, unsigned int voltage, unsigned int cellIndex)
 {
-	view.updateCellStatus(temp,capacity,voltage);
+	view.updateCellStatus(temperature,capacity,voltage,cellIndex);
 }
 

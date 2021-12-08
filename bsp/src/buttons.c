@@ -17,8 +17,6 @@
  * 5 - down*/
 
 /* idk why but cannot declare this in app.h->linker error:multiple declaration */
-app_state appState = state_cellStatusDisplay;
-
 void buttonsInit(button_handler *handler)
 {
 	bHandler = handler;
@@ -43,9 +41,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 				bHandler->timerFlag = 1;
 				HAL_TIM_Base_Start_IT(bHandler->antiGlitchTimer);
 				bHandler->buttonState = left;
-				if(appState != state_cellStatusDisplay)
+				if(aHandler->appState != state_cellStatusDisplay)
 				{
-					appState--;
+					aHandler->appState--;
 				}
 			}
 			break;
@@ -55,6 +53,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 				HAL_TIM_Base_Start_IT(bHandler->antiGlitchTimer);
 				bHandler->timerFlag = 1;
 				bHandler->buttonState = up;
+				if(aHandler->cellNumber < 79)
+				{
+					aHandler->cellNumber++;
+				}
 			}
 			break;
 		case GPIO_PIN_14:
@@ -71,9 +73,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 				bHandler->timerFlag = 1;
 				HAL_TIM_Base_Start_IT(bHandler->antiGlitchTimer);
 				bHandler->buttonState = right;
-				if(appState != state_debugDisplay)
+				if(aHandler->appState != state_debugDisplay)
 				{
-					appState++;
+					aHandler->appState++;
 				}
 			}
 			break;
@@ -83,6 +85,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_pin)
 				bHandler->timerFlag = 1;
 				HAL_TIM_Base_Start_IT(bHandler->antiGlitchTimer);
 				bHandler->buttonState = down;
+				if(aHandler->cellNumber != 0)
+				{
+					aHandler->cellNumber--;
+				}
 			}
 			break;
 		default:

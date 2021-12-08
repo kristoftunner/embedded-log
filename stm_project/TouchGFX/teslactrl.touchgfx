@@ -26,6 +26,11 @@
             "TextRotation": "0",
             "Color": {
               "Red": 2
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_2VI2",
+              "UseBuffer": true,
+              "BufferSize": 10
             }
           },
           {
@@ -38,7 +43,7 @@
           {
             "Type": "TextArea",
             "Name": "textArea2",
-            "Y": 72,
+            "Y": 78,
             "Width": 131,
             "Height": 18,
             "TextId": "__SingleUse_0GTI",
@@ -53,7 +58,7 @@
           {
             "Type": "TextArea",
             "Name": "textArea2_1",
-            "Y": 97,
+            "Y": 103,
             "Width": 108,
             "Height": 18,
             "TextId": "__SingleUse_UTDS",
@@ -68,7 +73,7 @@
           {
             "Type": "TextArea",
             "Name": "textArea3",
-            "Y": 46,
+            "Y": 55,
             "Width": 103,
             "Height": 18,
             "TextId": "__SingleUse_FD9C",
