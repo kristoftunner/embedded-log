@@ -649,19 +649,19 @@ void StartDefaultTask(void *argument)
 	{
 		for(int i = 0; i < sizeof(tHandler->cellCapacities) / sizeof(tHandler->cellCapacities[0]); i++)
 		{
-			tHandler->cellCapacities[i] = i;
+			tHandler->cellCapacities[i] = val;
 		}
 		for(int i = 0; i < sizeof(tHandler->cellTemps) / sizeof(tHandler->cellTemps[0]); i++)
 		{
-			tHandler->cellTemps[i] = i;
+			tHandler->cellTemps[i] = val;
 		}
 		for(int i = 0; i < sizeof(tHandler->cellVoltages) / sizeof(tHandler->cellVoltages[0]); i++)
 		{
-			tHandler->cellVoltages[i] = i;
+			tHandler->cellVoltages[i] = val;
 		}
 		for(int i = 0; i < sizeof(tHandler->chargerStats) / sizeof(tHandler->chargerStats[0]); i++)
 		{
-			tHandler->chargerStats[i] = i;
+			tHandler->chargerStats[i] = val;
 		}
 		stat = osMessageQueuePut(guiQueueHandle, tHandler, 0, 0);
 		val++;

@@ -19,8 +19,8 @@ void Screen1View::updateCellStatus(unsigned int temperature, unsigned int capaci
 {
 	Unicode::snprintf(textArea3Buffer, TEXTAREA3_SIZE, "%u", capacity);
 	Unicode::snprintf(textArea2_1Buffer, TEXTAREA2_1_SIZE, "%u", voltage);
-	Unicode::snprintf(textArea2Buffer, TEXTAREA2_SIZE, "%d", temperature);
-	Unicode::snprintf(textArea1_1Buffer, TEXTAREA1_1_SIZE, "%d", cellIndex);
+	Unicode::snprintf(textArea2Buffer, TEXTAREA2_SIZE, "%u", temperature);
+	Unicode::snprintf(textArea1_1Buffer, TEXTAREA1_1_SIZE, "%u", cellIndex);
 	textArea2.resizeToCurrentText();
 	textArea3.resizeToCurrentText();
 	textArea2_1.resizeToCurrentText();
