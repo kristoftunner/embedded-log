@@ -83,6 +83,47 @@
 #define RESP_QISTAT 3
 #define OK_QISTAT 2
 
+/*MQTT commands*/
+/* config parameters of the MQTT stack */
+#define CMD_QMTCFG "QMTFCG"
+#define RESP_QMTCFG 2
+#define OK_QMTCFG 2
+
+/* open the connection for the mqtt client */
+#define CMD_QMTOPEN "QMTIOPEN"
+#define RESP_QMTOPEN 0
+#define OK_QMTOPEN 0
+
+/* Cloes network for mqtt client*/
+#define CMD_QMTCLOSE "QMTCLOSE"
+#define RESP_QMTCLOSE 0
+#define OK_QMTCLOSE 0
+
+/* connect to an mqtt server */
+#define CMD_QMTCONN "QMTCONN"
+#define RESP_QMTCONN 0
+#define OK_QMTCONN 0
+
+/* Disconnect from mqtt server */
+#define CMD_QMTDISC "QMTDISC"
+#define RESP_QMTCONN 0
+#define OK_QMTCONN 0
+
+/* subrscribe to mqtt server topic */
+#define CMD_QMTSUB "QMTSUB"
+#define RESP_QMTSUB 0
+#define OK_QMTSUB 0
+
+/* publish to mqtt server topic */
+#define CMD_QMTPUB "QMTPUB"
+#define RESP_QMTPUB 0
+#define OK_QMTPUB 0
+
+/* unsubscribe from mqtt server topic */
+#define CMD_QMTUNS "QMTUNS"
+#define RESP_QMTUNS 0
+#define OK_QMTUNS 0
+
 typedef enum
 {
 	IP_INITIAL,
