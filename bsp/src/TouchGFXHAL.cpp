@@ -40,7 +40,6 @@ void TouchGFXHAL::initialize()
     // To overwrite the generated implementation, omit call to parent function
     // and implemented needed functionality here.
     // Please note, HAL::initialize() must be called to initialize the framework.
-	ILI9163_init(0);
     TouchGFXGeneratedHAL::initialize();
     setButtonController(&bc);
 }

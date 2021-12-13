@@ -34,17 +34,12 @@
 		<link>
 			<name>bsp</name>
 			<type>2</type>
-			<location>E:/Dev/projects/work/PRJ004/software/teslactrl/bsp</location>
+			<location>/media/kristoft/E1/Dev/projects/work/PRJ004/software/teslactrl/bsp</location>
 		</link>
 		<link>
 			<name>Drivers/BSP/inc</name>
 			<type>2</type>
-			<location>E:/Dev/projects/work/PRJ004/software/teslactrl/bsp/inc</location>
-		</link>
-		<link>
-			<name>Drivers/BSP/src</name>
-			<type>2</type>
-			<location>E:/Dev/projects/work/PRJ004/software/teslactrl/bsp/src</location>
+			<location>/home/kristoft/Programs/st/E::/Dev/projects/work/PRJ004/software/teslactrl/bsp/inc</location>
 		</link>
 	</linkedResources>
 </projectDescription>

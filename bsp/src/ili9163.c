@@ -26,7 +26,7 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 */
 static void ILI9163_DMA_Callback(DMA_HandleTypeDef *DmaHandle)
 {
-	for(int row = 0; row < ILI9163_HEIGHT; row++)
+	/*for(int row = 0; row < ILI9163_HEIGHT; row++)
 	{
 		for(int col = 0; col < ILI9163_WIDTH; col++)
 		{
@@ -34,7 +34,7 @@ static void ILI9163_DMA_Callback(DMA_HandleTypeDef *DmaHandle)
 			temp = iHandler->frameBuff[row*ILI9163_WIDTH + col];
 			iHandler->frameBuff[row*ILI9163_WIDTH + col] = (temp >> 8) | (temp << 8);
 		}
-	}
+	}*/
 	ILI9163_renderFb(&(iHandler->frameBuff));
 }
 
