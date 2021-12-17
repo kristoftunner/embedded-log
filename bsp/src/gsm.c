@@ -47,7 +47,16 @@ int gsm_sendAT()
 		strcat(gHandler->cmd.txBuffer, gHandler->cmd.writeCmd);
 		gHandler->cmd.msgLength += strlen(gHandler->cmd.writeCmd) + 1;
 	}
-
+	else if(gHandler->cmd.commandType==test)
+	{
+		strcat(gHandler->cmd.txBuffer,"=?");
+		gHandler->cmd.msgLength += 2;
+	}
+	else if(gHandler->cmd.commandType==read)
+	{
+		strcat(gHandler->cmd.txBuffer,"?");
+		gHandler->cmd.msgLength += 1;
+	}
 	strcat(gHandler->cmd.txBuffer,"\r");
 	gHandler->cmd.msgLength += 1;
 
@@ -110,6 +119,10 @@ void gsm_processMessage()
 				gHandler->cmd.currPacketNr++;
 				if(strncmp(&(gHandler->cmd.cmd),"QIACT",5) == 0)
 					gHandler->cmd.dataReadyFlag = 1;
+				else if(strncmp(&(gHandler->cmd.cmd),"QMTPUB",6) == 0)
+				{
+
+				}
 			}
 		}
 
@@ -137,9 +150,10 @@ void gsm_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *wr
 }
 
 /* initialize gsm for TCP/IP communcation */
-int gsm_init()
+int gsm_init(gsm_handler *handler)
 {
-    int error = 0;
+    gHandler = handler;
+	int error = 0;
     gsm_constructCmd(exec, CMD_GMI, "", RESP_GMI, OK_GMI);
     gsm_sendAT();
     /* check IP state */
@@ -156,7 +170,7 @@ int gsm_init()
     gsm_constructCmd(write, CMD_QIMODE, "0", RESP_QIMODE, OK_QIMODE);
     error |= gsm_sendAT();
     /* connect with IP address*/
-    gsm_constructCmd(write, CMD_QIDNSIP, "0", RESP_QIDNSIP, OK_QIDNSIP);
+    gsm_constructCmd(write, CMD_QIDNSIP, "1", RESP_QIDNSIP, OK_QIDNSIP);
     error |= gsm_sendAT();
     /* 3: retry times to resend, 2: 200ms to wait til ack, 512: data packet size, 1: escape sequence is on*/
     gsm_constructCmd(write, CMD_QITCFG, "3,2,512,1", RESP_QITCFG, OK_QITCFG);
@@ -178,34 +192,56 @@ int gsm_getIp()
 	return 0;
 }
 /* connect to the server */
-int gsm_connect(const char *ip, const char *port)
+int gsm_connect()
 {
     int error = 0;
     gsm_getTCPStatus();
     gsm_constructCmd(exec, CMD_QIREGAPP, "", RESP_QIREGAPP, OK_QIREGAPP);
     error |= gsm_sendAT();
 
-    while(gsm_getTCPStatus() == IP_INITIAL);
+    while(gsm_getTCPStatus() == IP_INITIAL)
+    {
+    	HAL_Delay(100);
+    }
+
+
 
     gsm_constructCmd(exec, CMD_QIACT, "", RESP_QIACT, OK_QIACT);
     gsm_sendAT();
 
-    while(gsm_getTCPStatus() == IP_START);
+    HAL_Delay(1000);
+
+    while(gsm_getTCPStatus() == IP_IND)
+    {
+    	HAL_Delay(100);
+    }
+
+    while(gsm_getTCPStatus() == IP_START)
+    {
+    	HAL_Delay(100);
+    }
 
     gsm_getIp();
 
-    while(gsm_getTCPStatus() == IP_GRPSACT);
+    while(gsm_getTCPStatus() == IP_GRPSACT)
+    {
+    	HAL_Delay(100);
+    }
 
-
-    while(gsm_getTCPStatus() == IP_STATUS);
+    while(gsm_getTCPStatus() != IP_STATUS)
+    {
+    	HAL_Delay(100);
+    }
 
     uint8_t buffer[100];
-    strcpy(buffer,"\"TCP\",\"");
-    strcat(buffer,ip);
-    strcat(buffer, "\",");
-    strcat(buffer,port);
-    gsm_constructCmd(write, CMD_QIOPEN, buffer, RESP_QIOPEN, OK_QIOPEN);
-    /* TODO: check for connect OK needs to be implemented*/
+    strcpy(buffer,"0,\"be.met3r.com\",1883");
+    gsm_constructCmd(write, CMD_QMTOPEN, buffer, RESP_QMTOPEN, OK_QMTOPEN);
+    error |= gsm_sendAT();
+
+    /* TODO: check for CONNECT OK*/
+    HAL_Delay(200);
+    strcpy(buffer,"0,\"clientExample\"");
+    gsm_constructCmd(write, CMD_QMTCONN, buffer, RESP_QMTCONN, OK_QMTCONN);
     error |= gsm_sendAT();
     
     return error;
@@ -279,7 +315,15 @@ int gsm_close()
     return error;
 }
 
-int gsm_recv(uint8_t *data)
+int gsm_mqttSend(char *jsonString)
 {
+	int error = 0;
+	uint8_t buffer[100];
+	gsm_constructCmd(read, CMD_QMTCONN, "", RESP_QMTCONN, OK_QMTCONN);
+	error |= gsm_sendAT();
 
+	strcpy(buffer, "0,0,0,0,\"test\"");
+	gsm_constructCmd(write, CMD_QMTPUB, buffer, RESP_QMTPUB, OK_QMTPUB);
+	error |= gsm_sendAT();
+	return 0;
 }

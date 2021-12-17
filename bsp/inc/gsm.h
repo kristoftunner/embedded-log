@@ -90,9 +90,9 @@
 #define OK_QMTCFG 2
 
 /* open the connection for the mqtt client */
-#define CMD_QMTOPEN "QMTIOPEN"
-#define RESP_QMTOPEN 0
-#define OK_QMTOPEN 0
+#define CMD_QMTOPEN "QMTOPEN"
+#define RESP_QMTOPEN 2
+#define OK_QMTOPEN 2
 
 /* Cloes network for mqtt client*/
 #define CMD_QMTCLOSE "QMTCLOSE"
@@ -101,13 +101,13 @@
 
 /* connect to an mqtt server */
 #define CMD_QMTCONN "QMTCONN"
-#define RESP_QMTCONN 0
-#define OK_QMTCONN 0
+#define RESP_QMTCONN 2
+#define OK_QMTCONN 2
 
 /* Disconnect from mqtt server */
 #define CMD_QMTDISC "QMTDISC"
-#define RESP_QMTCONN 0
-#define OK_QMTCONN 0
+#define RESP_QMTDISC
+#define OK_QMTDISC 0
 
 /* subrscribe to mqtt server topic */
 #define CMD_QMTSUB "QMTSUB"
@@ -116,8 +116,8 @@
 
 /* publish to mqtt server topic */
 #define CMD_QMTPUB "QMTPUB"
-#define RESP_QMTPUB 0
-#define OK_QMTPUB 0
+#define RESP_QMTPUB 2
+#define OK_QMTPUB 2
 
 /* unsubscribe from mqtt server topic */
 #define CMD_QMTUNS "QMTUNS"
@@ -138,6 +138,11 @@ typedef enum
 	PDP_DEACT,
 	IP_ERROR
 }TCPIP_status;
+
+typedef enum
+{
+
+}network_status;
 
 typedef enum {
 	test = 0,
@@ -180,11 +185,11 @@ gsm_handler *gHandler;
 void gsm_bufferAdd(gsm_cmd *cmd, uint8_t val);
 int gsm_sendAT();
 void gsm_processMessage();
-int gsm_connect(const char *ip, const char *port);
+int gsm_connect();
 int gsm_init();
-int gsm_connect(const char *ip, const char *port);
 void gsm_reset();
 int gsm_close();
 TCPIP_status gsm_getTCPStatus();
 int gsm_getIp();
+int gsm_mqttSend(char *jsonString);
 #endif /* INC_GSM_H_ */

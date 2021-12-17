@@ -12,12 +12,12 @@ typedef enum {
 	state_cellStatusDisplay,
 	state_chargerStatDisplay,
 	state_debugDisplay
-}app_state;
+}gui_state;
 
 typedef struct{
-	app_state appState;
+	gui_state appState;
 	uint16_t cellNumber; //status of this cell is displayed on the cell status gui screen
-}app_handler;
+}gui_handler;
 
-app_handler *aHandler;
+gui_handler *aHandler;
 #endif /* APP_H_ */
