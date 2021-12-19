@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "gsm.h"
-
+#include "log.h"
 #include "main.h"
 
 extern UART_HandleTypeDef huart8;
@@ -119,12 +119,21 @@ void gsm_processMessage()
 				gHandler->cmd.currPacketNr++;
 				if(strncmp(&(gHandler->cmd.cmd),"QIACT",5) == 0)
 					gHandler->cmd.dataReadyFlag = 1;
-				else if(strncmp(&(gHandler->cmd.cmd),"QMTPUB",6) == 0)
-				{
-
-				}
 			}
 		}
+
+		/* Checking the MQTT specific messages */
+		/* If message: MQTT Publish, then check for the ">" character*/
+		if(strncmp(&(gHandler->cmd.cmd),"QMTPUB",6) == 0)
+		{
+			if(gHandler->dataRX[0] = 0x3c)
+			{
+				gHandler->cmd.dataReadyFlag = 1;
+				gHandler->cmd.responseOKFlag = 1;
+			}
+		}
+
+
 
 		gHandler->cmd.dataPtr++;
 		HAL_UART_Receive_IT(&huart8, (uint8_t *)(gHandler->dataRX), 1);
@@ -149,11 +158,18 @@ void gsm_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *wr
 	gHandler->cmd.responseOKFlag = 0;
 }
 
-/* initialize gsm for TCP/IP communcation */
+/* initialize gsm for TCP/IP communcation
+ * Using the TCPIP stack in NON-TRANSPARENT mode with DNSIP address resolution*/
 int gsm_init(gsm_handler *handler)
 {
     gHandler = handler;
 	int error = 0;
+	gHandler->gsmState = GSM_PWR_UP;
+	gHandler->mqttStat.connResult = 0;
+	gHandler->mqttStat.connRetCode = 0;
+	gHandler->mqttStat.connState = 0;
+	gHandler->mqttStat.openResult = 0;
+
     gsm_constructCmd(exec, CMD_GMI, "", RESP_GMI, OK_GMI);
     gsm_sendAT();
     /* check IP state */
@@ -191,59 +207,94 @@ int gsm_getIp()
 
 	return 0;
 }
+
 /* connect to the server */
 int gsm_connect()
 {
     int error = 0;
-    gsm_getTCPStatus();
+    int ipIndCntr = 0;
+    int mqttConnCntr = 0;
+    HAL_Delay(1500);
+
+    while(gsm_getTCPStatus() != IP_INITIAL)
+    {
+    	HAL_Delay(200);
+    }
+
     gsm_constructCmd(exec, CMD_QIREGAPP, "", RESP_QIREGAPP, OK_QIREGAPP);
     error |= gsm_sendAT();
 
-    while(gsm_getTCPStatus() == IP_INITIAL)
+    HAL_Delay(1500);
+
+    while(gsm_getTCPStatus() != IP_START)
     {
-    	HAL_Delay(100);
+    	HAL_Delay(200);
     }
-
-
 
     gsm_constructCmd(exec, CMD_QIACT, "", RESP_QIACT, OK_QIACT);
     gsm_sendAT();
 
-    HAL_Delay(1000);
-
     while(gsm_getTCPStatus() == IP_IND)
     {
-    	HAL_Delay(100);
-    }
-
-    while(gsm_getTCPStatus() == IP_START)
-    {
-    	HAL_Delay(100);
+    	HAL_Delay(200);
+    	ipIndCntr++;
+    	if(ipIndCntr > 10)
+    	{
+    		LOG_ERR("MC60 stuck at TPCIP QIACT\r\n");
+    		return 1;
+    	}
     }
 
     gsm_getIp();
 
+    HAL_Delay(100);
+
     while(gsm_getTCPStatus() == IP_GRPSACT)
     {
-    	HAL_Delay(100);
+    	HAL_Delay(200);
     }
 
     while(gsm_getTCPStatus() != IP_STATUS)
     {
-    	HAL_Delay(100);
+    	HAL_Delay(200);
     }
+
+    gHandler->gsmState = GSM_INITIALIZED;
 
     uint8_t buffer[100];
     strcpy(buffer,"0,\"be.met3r.com\",1883");
     gsm_constructCmd(write, CMD_QMTOPEN, buffer, RESP_QMTOPEN, OK_QMTOPEN);
     error |= gsm_sendAT();
+    gsm_updateMqttStatus();
 
-    /* TODO: check for CONNECT OK*/
+    LOG_INF("MQTT TCPIP connect ID:%d\r\n", gHandler->mqttStat.tcpipConnectId);
+    LOG_INF("Open result:%d\r\n",gHandler->mqttStat.openResult);
+
+    /* TODO: check for OPEN OK*/
     HAL_Delay(200);
     strcpy(buffer,"0,\"clientExample\"");
     gsm_constructCmd(write, CMD_QMTCONN, buffer, RESP_QMTCONN, OK_QMTCONN);
     error |= gsm_sendAT();
     
+    /* check if connect OK*/
+    gsm_updateMqttStatus();
+
+    while(gHandler->mqttStat.connState != 3)
+    {
+    	HAL_Delay(500);
+    	gsm_constructCmd(read, CMD_QMTCONN, "", RESP_QMTCONN, OK_QMTCONN);
+    	gsm_sendAT();
+    	gsm_updateMqttStatus();
+    	mqttConnCntr++;
+    	if(mqttConnCntr > 10)
+    	{
+    		LOG_ERR("MC60 stuck at MQTT Connect command\r\n");
+    	}
+    }
+
+    gHandler->gsmState = GSM_MQTT_CONNECTED;
+    LOG_INF("MQTT in connected state\r\n");
+
     return error;
 }
 
@@ -299,31 +350,52 @@ TCPIP_status gsm_getTCPStatus()
 	return stat;
 }
 
+void gsm_updateMqttStatus()
+{
+	/*gsm_constructCmd(read, CMD_QMTCONN, "", RESP_QMTCONN, OK_QMTCONN);
+	error |= gsm_sendAT();*/
+
+	/* checking the result of the QMTCONN */
+	if(strncmp(&(gHandler->cmd.txBuffer),"AT+QMTCONN=",11) == 0)
+	{
+		gHandler->mqttStat.connResult = gHandler->cmd.rxBuffer[51]-48;
+		gHandler->mqttStat.connRetCode = gHandler->cmd.rxBuffer[53]-48;
+	}
+	else if(strncmp(&(gHandler->cmd.txBuffer),"AT+QMTCONN?",11) == 0)
+	{
+		gHandler->mqttStat.connState = gHandler->cmd.rxBuffer[26]-48;
+	}
+	else if(strncmp(&(gHandler->cmd.txBuffer),"AT+QMTOPEN=",11) == 0)
+	{
+		gHandler->mqttStat.openResult = gHandler->cmd.rxBuffer[53]-48;
+		gHandler->mqttStat.tcpipConnectId = gHandler->cmd.rxBuffer[51]-48;
+	}
+	else if(strncmp(&(gHandler->cmd.txBuffer),"AT+QMTOPEN?",11) == 0)
+	{
+		gHandler->mqttStat.tcpipConnectId = gHandler->cmd.rxBuffer[24]-48;
+	}
+}
+
 /* close connection with the server */
 int gsm_close()
 {
     int error = 0;
-    /* check conncetion */
-//    struct gsm_cmd qisrvc = gsm_constructCmd(read, CMD_QISRVC, "", RESP_QISRVC_READ, OK_QISRVC_READ);
-//    error |= gsm_sendAT(qisrvc);
-//    /* TODO: check if we are client in the connection */
-//    struct gsm_cmd qisrvc_write = gsm_constructCmd(write, CMD_QISRVC, "1", RESP_QISRVC, OK_QISRVC);
-//    error |= gsm_sendAT(qisrvc_write);
-//    struct gsm_cmd qideact = gsm_constructCmd(exec, CMD_QIDEACT, "", RESP_QIDEACT, OK_QIDEACT);
-//    error |= gsm_sendAT(qideact);
-
     return error;
 }
 
-int gsm_mqttSend(char *jsonString)
+int gsm_mqttSend(char *jsonString, int size)
 {
 	int error = 0;
-	uint8_t buffer[100];
-	gsm_constructCmd(read, CMD_QMTCONN, "", RESP_QMTCONN, OK_QMTCONN);
-	error |= gsm_sendAT();
-
+	uint8_t buffer[20];
+	uint8_t txBuffer[100];
 	strcpy(buffer, "0,0,0,0,\"test\"");
 	gsm_constructCmd(write, CMD_QMTPUB, buffer, RESP_QMTPUB, OK_QMTPUB);
 	error |= gsm_sendAT();
+	strcpy(txBuffer, jsonString);
+	strcat(txBuffer, "\032");
+	HAL_UART_Transmit(gHandler->port, (uint8_t *)txBuffer, sizeof(txBuffer),100);
+
+	LOG_INF("published:%s\r\n",txBuffer);
+
 	return 0;
 }

@@ -12,8 +12,10 @@
 #include "main.h"
 
 /* AT command defines 
- * RESP: size of the response in bytes
- * OK: place of the OK in the response in bytes*/
+ * RESP: number of response messages separated by \r\n
+ * OK: place of the OK packet in the messages
+ * 		messages are separated by \r\n, the first message
+ * 		is the command echoed back from the GSM module which is counted as well*/
 /* request manufacturer identification*/
 #define CMD_GMI "GMI"
 #define RESP_GMI 4
@@ -56,25 +58,30 @@
 #define CMD_QILOCIP "QILOCIP"
 #define RESP_QILOCIP 2
 #define OK_QILOCIP 0
-/* start TCP or UDP connection*/
+/* TODO: fill out OK and RESP
+ * start TCP or UDP connection*/
 #define CMD_QIOPEN "QIOPEN"
 #define RESP_QIOPEN 0
 #define OK_QIOPEN 0
-/* query the data information for sending*/
+/* TODO: fill out OK and RESP
+ * query the data information for sending*/
 #define CMD_QISACK "QISACK"
 #define RESP_QISACK 0
 #define OK_QISACK 0
-/* choose connection*/
+/* TODO: fill out OK and RESP
+ * choose connection*/
 #define CMD_QISRVC "QISRVC"
 #define RESP_QISRVC 0
 #define RESP_QISRVC_READ 0
 #define OK_QISRVC 0
 #define OK_QISRVC_READ 0
-/* close TCP or UDP connection*/
+/* TODO: fill out OK and RESP
+ * close TCP or UDP connection*/
 #define CMD_QICLOSE "QICLOSE"
 #define RESP_QICLOSE 0
 #define OK_QICLOSE 0
-/* deactivate GPRS/CSD context*/
+/* TODO: fill out OK and RESP
+ * deactivate GPRS/CSD context*/
 #define CMD_QIDEACT "QIDEACT"
 #define RESP_QIDEACT 0
 #define OK_QIDEACT 0
@@ -91,25 +98,28 @@
 
 /* open the connection for the mqtt client */
 #define CMD_QMTOPEN "QMTOPEN"
-#define RESP_QMTOPEN 2
+#define RESP_QMTOPEN 3
 #define OK_QMTOPEN 2
 
-/* Cloes network for mqtt client*/
+/* TODO: fill out OK and RESP
+ * Cloes network for mqtt client*/
 #define CMD_QMTCLOSE "QMTCLOSE"
 #define RESP_QMTCLOSE 0
 #define OK_QMTCLOSE 0
 
 /* connect to an mqtt server */
 #define CMD_QMTCONN "QMTCONN"
-#define RESP_QMTCONN 2
+#define RESP_QMTCONN 3
 #define OK_QMTCONN 2
 
-/* Disconnect from mqtt server */
+/* TODO: fill out OK and RESP
+ * Disconnect from mqtt server */
 #define CMD_QMTDISC "QMTDISC"
-#define RESP_QMTDISC
+#define RESP_QMTDISC 0
 #define OK_QMTDISC 0
 
-/* subrscribe to mqtt server topic */
+/* TODO: fill out OK and RESP
+ * subrscribe to mqtt server topic */
 #define CMD_QMTSUB "QMTSUB"
 #define RESP_QMTSUB 0
 #define OK_QMTSUB 0
@@ -119,7 +129,8 @@
 #define RESP_QMTPUB 2
 #define OK_QMTPUB 2
 
-/* unsubscribe from mqtt server topic */
+/* TODO: fill out OK and RESP
+ * unsubscribe from mqtt server topic */
 #define CMD_QMTUNS "QMTUNS"
 #define RESP_QMTUNS 0
 #define OK_QMTUNS 0
@@ -139,10 +150,23 @@ typedef enum
 	IP_ERROR
 }TCPIP_status;
 
+/* enums of the MQTT AT commands return codes*/
+typedef struct
+{
+	uint8_t connRetCode;
+	uint8_t connResult;
+	uint8_t connState;
+	uint8_t openResult;
+	uint8_t tcpipConnectId;
+}MQTT_status;
+
 typedef enum
 {
-
-}network_status;
+	GSM_PWR_UP,
+	GSM_INITIALIZED,
+	GSM_MQTT_CONNECTED,
+	GSM_FAIL
+}gsm_status;
 
 typedef enum {
 	test = 0,
@@ -175,10 +199,9 @@ typedef struct
 	uint8_t dataRX[2];	// valamiért az egybájtos változóval nem működött az UART recieve IT
 	gsm_cmd cmd;
 	uint8_t ipAddr[20];
+	gsm_status gsmState;
+	MQTT_status mqttStat;
 }gsm_handler;
-
-
-
 
 gsm_handler *gHandler;
 
@@ -190,6 +213,7 @@ int gsm_init();
 void gsm_reset();
 int gsm_close();
 TCPIP_status gsm_getTCPStatus();
+void gsm_updateMqttStatus();
 int gsm_getIp();
-int gsm_mqttSend(char *jsonString);
+int gsm_mqttSend(char *jsonString, int size);
 #endif /* INC_GSM_H_ */
