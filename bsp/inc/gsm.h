@@ -162,12 +162,18 @@ typedef struct
 
 typedef enum
 {
+	GSM_PWR_DOWN,
 	GSM_PWR_UP,
 	GSM_INITIALIZED,
 	GSM_MQTT_CONNECTED,
 	GSM_FAIL
 }gsm_status;
 
+typedef enum
+{
+	GSMERROR_NOERROR,
+	GSMERROR_MSGTIMOUT
+}gsm_errorCode;
 typedef enum {
 	test = 0,
 	read = 1,
@@ -191,16 +197,19 @@ typedef struct
 	uint8_t dataReadyFlag;
 	uint8_t responseOKFlag;
 	uint8_t delimiterCntr;
+	uint8_t msgTimout;
 }gsm_cmd;
 
 typedef struct
 {
 	UART_HandleTypeDef *port;
+	TIM_HandleTypeDef *msgTimeoutTimer;
 	uint8_t dataRX[2];	// valamiért az egybájtos változóval nem működött az UART recieve IT
 	gsm_cmd cmd;
 	uint8_t ipAddr[20];
 	gsm_status gsmState;
 	MQTT_status mqttStat;
+	gsm_errorCode errorCode;
 }gsm_handler;
 
 gsm_handler *gHandler;
@@ -209,11 +218,12 @@ void gsm_bufferAdd(gsm_cmd *cmd, uint8_t val);
 int gsm_sendAT();
 void gsm_processMessage();
 int gsm_connect();
+int gsm_startController(gsm_handler *handler);
 int gsm_init();
 void gsm_reset();
 int gsm_close();
 TCPIP_status gsm_getTCPStatus();
 void gsm_updateMqttStatus();
 int gsm_getIp();
-int gsm_mqttSend(char *jsonString, int size);
+int gsm_mqttPub(char *jsonString, char *topic);
 #endif /* INC_GSM_H_ */

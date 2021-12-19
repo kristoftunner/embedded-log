@@ -30,6 +30,8 @@ void gsm_reset()
 int gsm_sendAT()
 {
 	HAL_StatusTypeDef stat = 0;
+	int msgTimeoutCntr = 0;
+	gHandler->cmd.msgLength =0;
 
 	for(int i = 0; i < 256; i++)
 	{
@@ -37,7 +39,7 @@ int gsm_sendAT()
 		gHandler->cmd.txBuffer[i] = 0;
 	}
 	strcpy(gHandler->cmd.txBuffer, "AT+");
-	gHandler->cmd.msgLength += 3;
+	gHandler->cmd.msgLength = 3;
 	strcat(gHandler->cmd.txBuffer, gHandler->cmd.cmd);
 	gHandler->cmd.msgLength += strlen(gHandler->cmd.cmd);
 
@@ -71,12 +73,22 @@ int gsm_sendAT()
 	stat = HAL_UART_Receive_IT(&huart8, (uint8_t *)(gHandler->dataRX), 1);
 
 	/* waiting for the reception to end */
-	while(gHandler->cmd.dataReadyFlag == 0);
+	while((gHandler->cmd.dataReadyFlag == 0) && (gHandler->cmd.msgTimout == 0))
+	{
+		HAL_Delay(500);
+		msgTimeoutCntr++;
+		if(msgTimeoutCntr > 10)
+			gHandler->cmd.msgTimout = 1;
+	}
 
-	if(gHandler->cmd.responseOKFlag)
+	if(gHandler->cmd.responseOKFlag && (gHandler->cmd.msgTimout == 0))
 		return 0;
 	else
+	{
+		if(gHandler->cmd.msgTimout)
+			gHandler->errorCode = GSMERROR_MSGTIMOUT;
 		return 1;
+	}
 }
 
 /* 1)check rxBuffer
@@ -156,22 +168,30 @@ void gsm_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *wr
 	gHandler->dataRX[0] = 0;
 	gHandler->cmd.delimiterCntr = 0;
 	gHandler->cmd.responseOKFlag = 0;
+	gHandler->cmd.msgTimout = 0;
 }
 
 /* initialize gsm for TCP/IP communcation
  * Using the TCPIP stack in NON-TRANSPARENT mode with DNSIP address resolution*/
-int gsm_init(gsm_handler *handler)
+int gsm_init()
 {
-    gHandler = handler;
 	int error = 0;
-	gHandler->gsmState = GSM_PWR_UP;
 	gHandler->mqttStat.connResult = 0;
 	gHandler->mqttStat.connRetCode = 0;
 	gHandler->mqttStat.connState = 0;
 	gHandler->mqttStat.openResult = 0;
+	gHandler->errorCode = GSMERROR_NOERROR;
 
     gsm_constructCmd(exec, CMD_GMI, "", RESP_GMI, OK_GMI);
-    gsm_sendAT();
+    error |= gsm_sendAT();
+
+    /* If we cannot talk with the GSM module, restart it */
+    if(gHandler->errorCode == GSMERROR_MSGTIMOUT)
+    {
+    	return 1;
+    }
+
+    LOG_INF("Initializing the GSM module\r\n");
     /* check IP state */
     gsm_constructCmd(exec, CMD_QISTAT, "", RESP_QISTAT, OK_QISTAT);
     error |= gsm_sendAT();
@@ -192,6 +212,8 @@ int gsm_init(gsm_handler *handler)
     gsm_constructCmd(write, CMD_QITCFG, "3,2,512,1", RESP_QITCFG, OK_QITCFG);
     error |= gsm_sendAT();
     
+    LOG_INF("GSM module initialized\r\n");
+
     return error;
 }
 
@@ -259,8 +281,6 @@ int gsm_connect()
     	HAL_Delay(200);
     }
 
-    gHandler->gsmState = GSM_INITIALIZED;
-
     uint8_t buffer[100];
     strcpy(buffer,"0,\"be.met3r.com\",1883");
     gsm_constructCmd(write, CMD_QMTOPEN, buffer, RESP_QMTOPEN, OK_QMTOPEN);
@@ -289,13 +309,13 @@ int gsm_connect()
     	if(mqttConnCntr > 10)
     	{
     		LOG_ERR("MC60 stuck at MQTT Connect command\r\n");
+    		return 1;
     	}
     }
 
-    gHandler->gsmState = GSM_MQTT_CONNECTED;
     LOG_INF("MQTT in connected state\r\n");
 
-    return error;
+    return 0;
 }
 
 /* get the status of the TCPIP stack */
@@ -383,17 +403,63 @@ int gsm_close()
     return error;
 }
 
-int gsm_mqttSend(char *jsonString, int size)
+/* State machine for the MC60 controller engine
+ * GSM power up(with PWR_KEY)->initialize->connect->connected*/
+int gsm_startController(gsm_handler *handler)
 {
 	int error = 0;
-	uint8_t buffer[20];
+	gHandler = handler;
+	gHandler->gsmState = GSM_PWR_DOWN;
+	while(1)
+	{
+		switch(gHandler->gsmState)
+		{
+		case GSM_PWR_DOWN:
+			LOG_INF("Starting GSM module\r\n");
+			gsm_reset();
+			gHandler->gsmState = GSM_PWR_UP;
+			break;
+		case GSM_PWR_UP:
+			gsm_init();
+			if(gHandler->errorCode == GSMERROR_MSGTIMOUT)
+			{
+				gHandler->gsmState = GSM_PWR_DOWN;
+				LOG_INF("GSM message timeout, restarting GSM module!\r\n");
+			}
+			else
+				gHandler->gsmState = GSM_INITIALIZED;
+			break;
+		case GSM_INITIALIZED:
+			gsm_connect();
+			if(gHandler->mqttStat.connState == 3)
+				gHandler->gsmState = GSM_MQTT_CONNECTED;
+			else
+				gHandler->gsmState = GSM_PWR_DOWN;
+			break;
+		case GSM_MQTT_CONNECTED:
+			return 0;
+		}
+	}
+}
+/* MQTT Publish message function */
+int gsm_mqttPub(char *jsonString, char *topic)
+{
+	int error = 0;
+	uint8_t buffer[30];
 	uint8_t txBuffer[100];
-	strcpy(buffer, "0,0,0,0,\"test\"");
+	for(int i = 0; i < sizeof(txBuffer); i++)
+	{
+		txBuffer[i] = 0;
+	}
+	strcpy(buffer, "0,0,0,0,\"");
+	strcat(buffer, topic);
+	strcat(buffer,"\"");
+	strcpy(txBuffer, jsonString);
+	strcat(txBuffer, "\032\032\r\n");
+	int size = strlen(txBuffer);
 	gsm_constructCmd(write, CMD_QMTPUB, buffer, RESP_QMTPUB, OK_QMTPUB);
 	error |= gsm_sendAT();
-	strcpy(txBuffer, jsonString);
-	strcat(txBuffer, "\032");
-	HAL_UART_Transmit(gHandler->port, (uint8_t *)txBuffer, sizeof(txBuffer),100);
+	HAL_UART_Transmit(gHandler->port, (uint8_t *)txBuffer, size,100);
 
 	LOG_INF("published:%s\r\n",txBuffer);
 
