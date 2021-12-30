@@ -1,3 +1,6 @@
 [submodule "ext/log"]
 	path = ext/log
 	url = git@github.com:to9/embedded-log.git
+[submodule "ext/json"]
+	path = ext/json
+	url = git@github.com:rafagafe/tiny-json.git

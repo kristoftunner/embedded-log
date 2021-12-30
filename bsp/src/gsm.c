@@ -10,13 +10,6 @@
 #include "log.h"
 #include "main.h"
 
-extern UART_HandleTypeDef huart8;
-
-static uint8_t txBuffer[256];
-static uint8_t rxBuffer[256];
-
-int msgRecv = 0;
-
 void gsm_reset()
 {
   HAL_GPIO_WritePin(GPIOD,PWR_KEY_Pin,GPIO_PIN_SET);
@@ -25,15 +18,13 @@ void gsm_reset()
   HAL_Delay(1000);
 }
 
-
-
 int gsm_sendAT()
 {
 	HAL_StatusTypeDef stat = 0;
 	int msgTimeoutCntr = 0;
 	gHandler->cmd.msgLength =0;
 
-	for(int i = 0; i < 256; i++)
+	for(int i = 0; i < sizeof(gHandler->cmd.txBuffer); i++)
 	{
 		gHandler->cmd.rxBuffer[i] = 0;
 		gHandler->cmd.txBuffer[i] = 0;
@@ -62,16 +53,23 @@ int gsm_sendAT()
 	strcat(gHandler->cmd.txBuffer,"\r");
 	gHandler->cmd.msgLength += 1;
 
-	stat = HAL_UART_Transmit(&huart8, (uint8_t*)(gHandler->cmd.txBuffer), gHandler->cmd.msgLength, 1000);
+	stat = HAL_UART_Transmit(gHandler->port, (uint8_t*)(gHandler->cmd.txBuffer), gHandler->cmd.msgLength, 1000);
 
 	/* flush UART recieve register before beginning the reception*/
-	__HAL_UART_CLEAR_OREFLAG(&huart8);
-	__HAL_UART_CLEAR_NEFLAG(&huart8);
-	__HAL_UART_CLEAR_FEFLAG(&huart8);
-	__HAL_UART_DISABLE_IT(&huart8, UART_IT_ERR);
-	uint8_t temp = (uint8_t)(huart8.Instance->RDR);
-	stat = HAL_UART_Receive_IT(&huart8, (uint8_t *)(gHandler->dataRX), 1);
+	__HAL_UART_CLEAR_OREFLAG(gHandler->port);
+	__HAL_UART_CLEAR_NEFLAG(gHandler->port);
+	__HAL_UART_CLEAR_FEFLAG(gHandler->port);
+	__HAL_UART_DISABLE_IT(gHandler->port, UART_IT_ERR);
+	uint8_t temp = (uint8_t)(gHandler->port->Instance->RDR);
+	stat = HAL_UART_Receive_IT(gHandler->port, (uint8_t *)(gHandler->dataRX), 1);
 
+	/* if we are sending a publish message, then first check for mqttPubSendFlag("<" character)*/
+	if(strncmp(&(gHandler->cmd.cmd),"QMTPUB",6) == 0)
+	{
+		while(gHandler->cmd.mqttPubSendFlag == 0);
+		HAL_Delay(10);
+		HAL_UART_Transmit(gHandler->port, (uint8_t *)gHandler->cmd.publishBuffer,strlen(gHandler->cmd.publishBuffer),100);
+	}
 	/* waiting for the reception to end */
 	while((gHandler->cmd.dataReadyFlag == 0) && (gHandler->cmd.msgTimout == 0))
 	{
@@ -140,21 +138,35 @@ void gsm_processMessage()
 		{
 			if(gHandler->dataRX[0] = 0x3c)
 			{
-				gHandler->cmd.dataReadyFlag = 1;
-				gHandler->cmd.responseOKFlag = 1;
+				gHandler->cmd.mqttPubSendFlag = 1;
+				//gHandler->cmd.dataReadyFlag = 1;
+				//gHandler->cmd.responseOKFlag = 1;
 			}
 		}
 
-
-
 		gHandler->cmd.dataPtr++;
-		HAL_UART_Receive_IT(&huart8, (uint8_t *)(gHandler->dataRX), 1);
+		HAL_UART_Receive_IT(gHandler->port, (uint8_t *)(gHandler->dataRX), 1);
 	}
 }
 
 /* helper function for constructing AT command */
-void gsm_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *writeCmd, uint8_t responsePackets, uint8_t offsetPacket)
+void gsm_constructCmd(ATCommandType type, const uint8_t *cmd, const uint8_t *writeCmd, uint8_t responsePackets, uint8_t offsetPacket)
 {
+	/* Clearing out buffers of the cmd struct */
+	for(int i = 0; i < sizeof(gHandler->cmd.cmd)/sizeof(gHandler->cmd.cmd[0]); i++)
+	{
+		gHandler->cmd.cmd[i] = 0;
+	}
+	for(int i = 0; i < sizeof(gHandler->cmd.publishBuffer)/sizeof(gHandler->cmd.publishBuffer[0]); i++)
+	{
+		gHandler->cmd.publishBuffer[i] = 0;
+	}
+	for(int i = 0; i < sizeof(gHandler->cmd.rxBuffer)/sizeof(gHandler->cmd.rxBuffer[i]); i++)
+	{
+		gHandler->cmd.rxBuffer[i] = 0;
+		gHandler->cmd.txBuffer[i] = 0;
+	}
+
 	strcpy(gHandler->cmd.cmd,cmd);
 	strcpy(gHandler->cmd.writeCmd,writeCmd);
 	gHandler->cmd.commandType = type;
@@ -169,6 +181,7 @@ void gsm_constructCmd(ATCommandType type, const uint8_t * cmd, const uint8_t *wr
 	gHandler->cmd.delimiterCntr = 0;
 	gHandler->cmd.responseOKFlag = 0;
 	gHandler->cmd.msgTimout = 0;
+	gHandler->cmd.mqttPubSendFlag = 0;
 }
 
 /* initialize gsm for TCP/IP communcation
@@ -372,9 +385,6 @@ TCPIP_status gsm_getTCPStatus()
 
 void gsm_updateMqttStatus()
 {
-	/*gsm_constructCmd(read, CMD_QMTCONN, "", RESP_QMTCONN, OK_QMTCONN);
-	error |= gsm_sendAT();*/
-
 	/* checking the result of the QMTCONN */
 	if(strncmp(&(gHandler->cmd.txBuffer),"AT+QMTCONN=",11) == 0)
 	{
@@ -397,6 +407,7 @@ void gsm_updateMqttStatus()
 }
 
 /* close connection with the server */
+/* TODO: implement function */
 int gsm_close()
 {
     int error = 0;
@@ -441,27 +452,20 @@ int gsm_startController(gsm_handler *handler)
 		}
 	}
 }
+
 /* MQTT Publish message function */
 int gsm_mqttPub(char *jsonString, char *topic)
 {
 	int error = 0;
-	uint8_t buffer[30];
-	uint8_t txBuffer[100];
-	for(int i = 0; i < sizeof(txBuffer); i++)
-	{
-		txBuffer[i] = 0;
-	}
+	uint8_t buffer[20];
 	strcpy(buffer, "0,0,0,0,\"");
 	strcat(buffer, topic);
 	strcat(buffer,"\"");
-	strcpy(txBuffer, jsonString);
-	strcat(txBuffer, "\032\032\r\n");
-	int size = strlen(txBuffer);
 	gsm_constructCmd(write, CMD_QMTPUB, buffer, RESP_QMTPUB, OK_QMTPUB);
+	strcpy(gHandler->cmd.publishBuffer, jsonString);
+	strcat(gHandler->cmd.publishBuffer, "\032\032\r\n");
 	error |= gsm_sendAT();
-	HAL_UART_Transmit(gHandler->port, (uint8_t *)txBuffer, size,100);
-
-	LOG_INF("published:%s\r\n",txBuffer);
+	LOG_INF("published:%s\r\n",gHandler->cmd.publishBuffer);
 
 	return 0;
 }

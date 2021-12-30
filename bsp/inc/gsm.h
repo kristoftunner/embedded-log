@@ -126,7 +126,7 @@
 
 /* publish to mqtt server topic */
 #define CMD_QMTPUB "QMTPUB"
-#define RESP_QMTPUB 2
+#define RESP_QMTPUB 3
 #define OK_QMTPUB 2
 
 /* TODO: fill out OK and RESP
@@ -184,10 +184,11 @@ typedef enum {
 typedef struct
 {
 	ATCommandType commandType;
-	uint8_t cmd[256];
-	uint8_t writeCmd[256];
-	uint8_t rxBuffer[256];
-	uint8_t txBuffer[256];
+	uint8_t cmd[32];
+	uint8_t writeCmd[64];
+	uint8_t rxBuffer[128];
+	uint8_t txBuffer[128];
+	uint8_t publishBuffer[256];
 	uint16_t msgLength;
 	uint16_t responePacketNr; //number of response packets separated by \r\n
 	uint8_t currPacketNr;
@@ -196,6 +197,7 @@ typedef struct
 	uint8_t dataPtr;
 	uint8_t dataReadyFlag;
 	uint8_t responseOKFlag;
+	uint8_t mqttPubSendFlag;
 	uint8_t delimiterCntr;
 	uint8_t msgTimout;
 }gsm_cmd;
