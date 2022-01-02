@@ -94,7 +94,8 @@ int gsm_sendAT()
  * 2) if current message is not -> continue the UART reception*/
 void gsm_processMessage()
 {
-	if(gHandler->cmd.dataReadyFlag == 0)
+	/* If configuring the GSM module OR publishing then parse UART input*/
+	if(gHandler->cmd.dataReadyFlag == 0 && ((gHandler->mqttPubSubStatus == MQTT_INITIAL) || gHandler->mqttPubSubStatus == MQTT_PUBLISHING))
 	{
 
 		if(gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr] == '\n' && gHandler->cmd.rxBuffer[gHandler->cmd.dataPtr-1] == '\r')
@@ -108,16 +109,34 @@ void gsm_processMessage()
 					gHandler->cmd.responseOKFlag = 1;
 			}
 
-			/* check if all the message packe recieved*/
-			if(gHandler->cmd.delimiterCntr == (gHandler->cmd.responePacketNr-1)*2)
+			/* check if all the message packe recieved
+			 * for some reason quectel module ends the command echo message with "\r\n" only for the QMTPUB command
+			 * */
+			if(strncmp(&(gHandler->cmd.cmd),"QMTPUB",6) == 0)
 			{
-				gHandler->cmd.dataReadyFlag = 1;
-				return;
-			}
-			else if((gHandler->cmd.delimiterCntr % 2) == 0)
-			{
+				if(gHandler->cmd.delimiterCntr == (gHandler->cmd.responePacketNr-1)*2+1)
+				{
+					gHandler->cmd.dataReadyFlag = 1;
+					return;
+				}
+				else if((gHandler->cmd.delimiterCntr % 2) == 0)
+				{
 
-				gHandler->cmd.currPacketNr++;
+					gHandler->cmd.currPacketNr++;
+				}
+			}
+			else
+			{
+				if(gHandler->cmd.delimiterCntr == (gHandler->cmd.responePacketNr-1)*2)
+				{
+					gHandler->cmd.dataReadyFlag = 1;
+					return;
+				}
+				else if((gHandler->cmd.delimiterCntr % 2) == 0)
+				{
+
+					gHandler->cmd.currPacketNr++;
+				}
 			}
 		}
 
@@ -145,8 +164,24 @@ void gsm_processMessage()
 		}
 
 		gHandler->cmd.dataPtr++;
-		HAL_UART_Receive_IT(gHandler->port, (uint8_t *)(gHandler->dataRX), 1);
 	}
+	else
+	{
+		if(gHandler->cmd.subrscribeBuffer[gHandler->cmd.subscribeDataPtr] == '\n' && gHandler->cmd.subrscribeBuffer[gHandler->cmd.subscribeDataPtr-1] == '\r')
+		{
+			gHandler->cmd.delimiterCntr++;
+			if(gHandler->cmd.delimiterCntr == 2)
+			{
+				if(strncmp(&(gHandler->cmd.subrscribeBuffer[2]),"+QMTRECV",8) == 0)
+				{
+					gHandler->cmd.dataReadyFlag = 1;
+				}
+			}
+		}
+		gHandler->cmd.subscribeDataPtr++;
+	}
+
+	HAL_UART_Receive_IT(gHandler->port, (uint8_t *)(gHandler->dataRX), 1);
 }
 
 /* helper function for constructing AT command */
@@ -193,6 +228,7 @@ int gsm_init()
 	gHandler->mqttStat.connRetCode = 0;
 	gHandler->mqttStat.connState = 0;
 	gHandler->mqttStat.openResult = 0;
+	gHandler->mqttPubSubStatus = MQTT_INITIAL;
 	gHandler->errorCode = GSMERROR_NOERROR;
 
     gsm_constructCmd(exec, CMD_GMI, "", RESP_GMI, OK_GMI);
@@ -453,19 +489,174 @@ int gsm_startController(gsm_handler *handler)
 	}
 }
 
-/* MQTT Publish message function */
+/* MQTT Subscribe function*/
+int gsm_mqttSub(char *topic)
+{
+	int error = 0;
+	uint8_t buffer[30];
+	
+	gHandler->mqttPubSubStatus = MQTT_INITIAL;
+
+	for(int i = 0; i < sizeof(gHandler->cmd.subrscribeBuffer); i++)
+	{
+		gHandler->cmd.subrscribeBuffer[i];
+	}
+	for(int i = 0; i < sizeof(buffer); i++)
+	{
+		buffer[i] = 0;
+	}
+
+	if(strlen(topic) >sizeof(buffer))
+	{
+		LOG_ERR("MQTT topic is too long, get larger buffer!\r\n");
+		return 1;
+	}
+
+	strcpy(buffer, "0,1,\"");
+	strcat(buffer, topic);
+	strcat(buffer, "\",2");
+
+	gsm_constructCmd(write, CMD_QMTSUB, buffer, RESP_QMTSUB, OK_QMTSUB);
+	error |= gsm_sendAT();
+	if(gHandler->cmd.rxBuffer[47] == 48)
+	{
+		gHandler->mqttPubSubStatus = MQTT_RECIEVING;
+	}
+	else
+	{
+		gHandler->mqttPubSubStatus = MQTT_INITIAL;
+		LOG_ERR("Could not subrscribe to topic!\r\n");
+		return 1;
+	}
+
+	LOG_INF("subscribed to:%s\r\n",topic);
+
+	HAL_UART_Receive_IT(gHandler->port, (uint8_t *)(gHandler->dataRX), 1);
+
+	/* Clear the flags for the first reception */
+	gHandler->cmd.subscribeDataPtr = 0;
+	gHandler->cmd.delimiterCntr = 0;
+	gHandler->cmd.dataReadyFlag = 0;
+	return error;
+}
+
+/**
+ * @brief	MQTT message process control function 
+ * 
+ * @param subrscribeMsg 
+ * @param publishMsg 
+ */
+void gsm_mqttProcess(MQTT_controlMsg *subrscribeMsg, MQTT_controlMsg *publishMsg)
+{
+	int error = 0;
+	switch(gHandler->mqttPubSubStatus)
+	{
+	case MQTT_INITIAL:
+		LOG_WRN("MQTT subrscription failed!\r\n");
+		break;
+	case MQTT_RECIEVING:
+		if(gHandler->cmd.dataReadyFlag)
+		{
+			/* clear the subrscribeMsg and parse the recieved JSON input*/
+			for(int i = 0; i < sizeof(subrscribeMsg->jsonString)/sizeof(subrscribeMsg->jsonString[0]); i++)
+			{
+				subrscribeMsg->jsonString[i] = 0;
+			}
+			for(int i = 0; i < sizeof(subrscribeMsg->topic)/sizeof(subrscribeMsg->topic[0]); i++)
+			{
+				subrscribeMsg->topic[i] = 0;
+			}
+
+			gsm_mqttParseMsg(subrscribeMsg);
+
+			/* clear the subrscribebuffer and the flags needed for message reception*/
+			gHandler->cmd.subscribeDataPtr = 0;
+			for(int i = 0; i < sizeof(gHandler->cmd.subrscribeBuffer)/sizeof(gHandler->cmd.subrscribeBuffer[0]); i++)
+			{
+				gHandler->cmd.subrscribeBuffer[i] = 0;
+			}
+			gHandler->mqttPubSubStatus = MQTT_RECIEVED;
+			gHandler->cmd.subscribeDataPtr = 0;
+			gHandler->cmd.delimiterCntr = 0;
+			gHandler->cmd.dataReadyFlag = 0;
+		}
+		else
+		{
+			;	
+		}
+		break;
+	case MQTT_PUBLISHING:
+		error |= gsm_mqttPub(publishMsg->jsonString, publishMsg->topic);
+		break;
+	}
+}
+
+void gsm_mqttParseMsg(MQTT_controlMsg *subrscribeMsg)
+{
+	/*parse publishbuffer*/
+	uint8_t delimiter = 44;
+	uint8_t *topic,*msg = NULL;
+	int msgSize,topicSize = 0;
+	topic = strchr(gHandler->cmd.subrscribeBuffer,delimiter)+3;
+	if(topic != NULL)
+	{
+		msg = strchr(topic,delimiter)+1;
+		if(msg != NULL)
+		{
+			msgSize = strlen(msg)-2;
+			topicSize = msg-topic-1;
+			strncpy(subrscribeMsg->jsonString, msg, msgSize);
+			strncpy(subrscribeMsg->topic, topic, topicSize);
+		}
+	}
+}
+ 
+/**
+ * @brief MQTT publishing function
+ * 
+ * @param jsonString 		string for the message
+ * @param topic 			MQTT topic name
+ * @return int 				error return, 0 if OK 
+ */
 int gsm_mqttPub(char *jsonString, char *topic)
 {
 	int error = 0;
-	uint8_t buffer[20];
+	uint8_t buffer[30];
+
+	gHandler->mqttPubSubStatus = MQTT_PUBLISHING;
+
+	if(strlen(jsonString) > sizeof(gHandler->cmd.publishBuffer))
+	{
+		LOG_ERR("JSON string too long\r\n");
+		return 1;
+	}
+	if(strlen(topic) > sizeof(buffer))
+	{
+		LOG_ERR("MQTT Topic is too long, get larger buffer!\r\n");
+		return 1;
+	}
+
 	strcpy(buffer, "0,0,0,0,\"");
 	strcat(buffer, topic);
 	strcat(buffer,"\"");
 	gsm_constructCmd(write, CMD_QMTPUB, buffer, RESP_QMTPUB, OK_QMTPUB);
 	strcpy(gHandler->cmd.publishBuffer, jsonString);
-	strcat(gHandler->cmd.publishBuffer, "\032\032\r\n");
+	strcat(gHandler->cmd.publishBuffer, "\032\032");
 	error |= gsm_sendAT();
 	LOG_INF("published:%s\r\n",gHandler->cmd.publishBuffer);
 
-	return 0;
+	/* clearing the needed message flags and enabling the UART recieve interrupt for the mqtt message reception*/
+	gHandler->cmd.subscribeDataPtr = 0;
+	gHandler->cmd.delimiterCntr = 0;
+	gHandler->cmd.dataReadyFlag = 0;
+	HAL_UART_Receive_IT(gHandler->port, (uint8_t *)(gHandler->dataRX), 1);
+	if(error == 0)
+	{
+		gHandler->mqttPubSubStatus = MQTT_RECIEVING;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
 }

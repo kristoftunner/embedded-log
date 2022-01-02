@@ -121,13 +121,13 @@
 /* TODO: fill out OK and RESP
  * subrscribe to mqtt server topic */
 #define CMD_QMTSUB "QMTSUB"
-#define RESP_QMTSUB 0
-#define OK_QMTSUB 0
+#define RESP_QMTSUB 3
+#define OK_QMTSUB 2
 
 /* publish to mqtt server topic */
 #define CMD_QMTPUB "QMTPUB"
 #define RESP_QMTPUB 3
-#define OK_QMTPUB 2
+#define OK_QMTPUB 3
 
 /* TODO: fill out OK and RESP
  * unsubscribe from mqtt server topic */
@@ -181,6 +181,33 @@ typedef enum {
 	exec = 3
 }ATCommandType;
 
+/* enum for the states of the MQTT task*/
+typedef enum {
+	MQTT_INITIAL,
+	MQTT_RECIEVING,
+	MQTT_RECIEVED,
+	MQTT_PUBLISHING
+}MQTT_pubSubStatus;
+
+/* enum for MQTT message type(Publish, subscribe)*/
+typedef enum{
+	PUBMSG,
+	SUBMSG,
+}MQTT_msgType;
+
+/**
+ * @brief MQTT message control block for sending/recieving MQTT messages  
+ * 
+ */
+typedef struct
+{
+	MQTT_msgType msgFlag;
+	uint8_t jsonString[128];
+	uint8_t topic[32];
+	/* msgValid flag, indicating for the gsm_mqttProcess that it is a valid publish message*/
+}MQTT_controlMsg;
+
+/* this struct includes all the information needed for AT command sending/recieving*/
 typedef struct
 {
 	ATCommandType commandType;
@@ -189,6 +216,8 @@ typedef struct
 	uint8_t rxBuffer[128];
 	uint8_t txBuffer[128];
 	uint8_t publishBuffer[256];
+	uint8_t subrscribeBuffer[256];
+	uint16_t subscribeDataPtr;
 	uint16_t msgLength;
 	uint16_t responePacketNr; //number of response packets separated by \r\n
 	uint8_t currPacketNr;
@@ -210,8 +239,9 @@ typedef struct
 	gsm_cmd cmd;
 	uint8_t ipAddr[20];
 	gsm_status gsmState;
-	MQTT_status mqttStat;
 	gsm_errorCode errorCode;
+	MQTT_status mqttStat;
+	MQTT_pubSubStatus mqttPubSubStatus;
 }gsm_handler;
 
 gsm_handler *gHandler;
@@ -228,4 +258,7 @@ TCPIP_status gsm_getTCPStatus();
 void gsm_updateMqttStatus();
 int gsm_getIp();
 int gsm_mqttPub(char *jsonString, char *topic);
+int gsm_mqttSub(char *topic);
+void gsm_mqttProcess(MQTT_controlMsg *subrscribeMsg, MQTT_controlMsg *publishMsg);
+void gsm_mqttParseMsg(MQTT_controlMsg *subrscribeMsg);
 #endif /* INC_GSM_H_ */

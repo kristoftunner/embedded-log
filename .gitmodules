@@ -4,3 +4,6 @@
 [submodule "ext/json"]
 	path = ext/json
 	url = git@github.com:rafagafe/tiny-json.git
+[submodule "ext/jsonmaker"]
+	path = ext/jsonmaker
+	url = git@github.com:rafagafe/json-maker.git
