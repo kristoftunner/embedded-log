@@ -1,9 +1,4 @@
-/*
- * gsm.h
- *
- *  Created on: Nov 17, 2021
- *      Author: usr_tunnerk
- */
+/** @file gsm.h */
 
 #ifndef INC_GSM_H_
 #define INC_GSM_H_
@@ -234,7 +229,6 @@ typedef struct
 typedef struct
 {
 	UART_HandleTypeDef *port;
-	TIM_HandleTypeDef *msgTimeoutTimer;
 	uint8_t dataRX[2];	// valamiért az egybájtos változóval nem működött az UART recieve IT
 	gsm_cmd cmd;
 	uint8_t ipAddr[20];
@@ -246,7 +240,6 @@ typedef struct
 
 gsm_handler *gHandler;
 
-void gsm_bufferAdd(gsm_cmd *cmd, uint8_t val);
 int gsm_sendAT();
 void gsm_processMessage();
 int gsm_connect();
@@ -259,6 +252,13 @@ void gsm_updateMqttStatus();
 int gsm_getIp();
 int gsm_mqttPub(char *jsonString, char *topic);
 int gsm_mqttSub(char *topic);
+
+/**
+ * @brief MQTT processing function
+ * 
+ * @param subrscribeMsg 
+ * @param publishMsg 
+ */
 void gsm_mqttProcess(MQTT_controlMsg *subrscribeMsg, MQTT_controlMsg *publishMsg);
 void gsm_mqttParseMsg(MQTT_controlMsg *subrscribeMsg);
 #endif /* INC_GSM_H_ */

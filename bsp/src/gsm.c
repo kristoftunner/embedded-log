@@ -1,14 +1,11 @@
-/*
- * gsm.c
- *
- *  Created on: 17 Nov 2021
- *      Author: usr_tunnerk
- */
 #include <string.h>
 #include <stdint.h>
 #include "gsm.h"
+#include "time.h"
 #include "log.h"
 #include "main.h"
+
+static const char moduleName[] = "gsm";
 
 void gsm_reset()
 {
@@ -240,7 +237,7 @@ int gsm_init()
     	return 1;
     }
 
-    LOG_INF("Initializing the GSM module\r\n");
+    LOG_INF("%s %s Initializing the GSM module\r\n", moduleName, ltHandler->dayParsed);
     /* check IP state */
     gsm_constructCmd(exec, CMD_QISTAT, "", RESP_QISTAT, OK_QISTAT);
     error |= gsm_sendAT();
@@ -261,7 +258,7 @@ int gsm_init()
     gsm_constructCmd(write, CMD_QITCFG, "3,2,512,1", RESP_QITCFG, OK_QITCFG);
     error |= gsm_sendAT();
     
-    LOG_INF("GSM module initialized\r\n");
+    LOG_INF("%s %s GSM module initialized\r\n", moduleName, ltHandler->dayParsed);
 
     return error;
 }
@@ -311,7 +308,7 @@ int gsm_connect()
     	ipIndCntr++;
     	if(ipIndCntr > 10)
     	{
-    		LOG_ERR("MC60 stuck at TPCIP QIACT\r\n");
+    		LOG_ERR("%s %s MC60 stuck at TPCIP QIACT\r\n", moduleName, ltHandler->dayParsed);
     		return 1;
     	}
     }
@@ -336,8 +333,8 @@ int gsm_connect()
     error |= gsm_sendAT();
     gsm_updateMqttStatus();
 
-    LOG_INF("MQTT TCPIP connect ID:%d\r\n", gHandler->mqttStat.tcpipConnectId);
-    LOG_INF("Open result:%d\r\n",gHandler->mqttStat.openResult);
+    LOG_INF("%s %s MQTT TCPIP connect ID:%d\r\n", moduleName, ltHandler->dayParsed, gHandler->mqttStat.tcpipConnectId);
+    LOG_INF("%s %s Open result:%d\r\n",moduleName, ltHandler->dayParsed, gHandler->mqttStat.openResult);
 
     /* TODO: check for OPEN OK*/
     HAL_Delay(200);
@@ -357,12 +354,12 @@ int gsm_connect()
     	mqttConnCntr++;
     	if(mqttConnCntr > 10)
     	{
-    		LOG_ERR("MC60 stuck at MQTT Connect command\r\n");
+    		LOG_ERR("%s %s MC60 stuck at MQTT Connect command\r\n", moduleName, ltHandler->dayParsed);
     		return 1;
     	}
     }
 
-    LOG_INF("MQTT in connected state\r\n");
+    LOG_INF("%s %s MQTT in connected state\r\n", moduleName, ltHandler->dayParsed);
 
     return 0;
 }
@@ -462,7 +459,7 @@ int gsm_startController(gsm_handler *handler)
 		switch(gHandler->gsmState)
 		{
 		case GSM_PWR_DOWN:
-			LOG_INF("Starting GSM module\r\n");
+			LOG_INF("%s %s Starting GSM module\r\n", moduleName, ltHandler->dayParsed);
 			gsm_reset();
 			gHandler->gsmState = GSM_PWR_UP;
 			break;
@@ -471,7 +468,7 @@ int gsm_startController(gsm_handler *handler)
 			if(gHandler->errorCode == GSMERROR_MSGTIMOUT)
 			{
 				gHandler->gsmState = GSM_PWR_DOWN;
-				LOG_INF("GSM message timeout, restarting GSM module!\r\n");
+				LOG_INF("%s %s GSM message timeout, restarting GSM module!\r\n", moduleName, ltHandler->dayParsed);
 			}
 			else
 				gHandler->gsmState = GSM_INITIALIZED;
@@ -508,7 +505,7 @@ int gsm_mqttSub(char *topic)
 
 	if(strlen(topic) >sizeof(buffer))
 	{
-		LOG_ERR("MQTT topic is too long, get larger buffer!\r\n");
+		LOG_ERR("%s %s MQTT topic is too long, get larger buffer!\r\n", moduleName, ltHandler->dayParsed);
 		return 1;
 	}
 
@@ -525,11 +522,11 @@ int gsm_mqttSub(char *topic)
 	else
 	{
 		gHandler->mqttPubSubStatus = MQTT_INITIAL;
-		LOG_ERR("Could not subrscribe to topic!\r\n");
+		LOG_ERR("%s Could not subrscribe to topic!\r\n", moduleName);
 		return 1;
 	}
 
-	LOG_INF("subscribed to:%s\r\n",topic);
+	LOG_INF("%s %s subscribed to:%s\r\n",moduleName,ltHandler->dayParsed, topic);
 
 	HAL_UART_Receive_IT(gHandler->port, (uint8_t *)(gHandler->dataRX), 1);
 
@@ -540,19 +537,13 @@ int gsm_mqttSub(char *topic)
 	return error;
 }
 
-/**
- * @brief	MQTT message process control function 
- * 
- * @param subrscribeMsg 
- * @param publishMsg 
- */
 void gsm_mqttProcess(MQTT_controlMsg *subrscribeMsg, MQTT_controlMsg *publishMsg)
 {
 	int error = 0;
 	switch(gHandler->mqttPubSubStatus)
 	{
 	case MQTT_INITIAL:
-		LOG_WRN("MQTT subrscription failed!\r\n");
+		LOG_WRN("%s %s MQTT subrscription failed!\r\n", moduleName, ltHandler->dayParsed);
 		break;
 	case MQTT_RECIEVING:
 		if(gHandler->cmd.dataReadyFlag)
@@ -627,12 +618,12 @@ int gsm_mqttPub(char *jsonString, char *topic)
 
 	if(strlen(jsonString) > sizeof(gHandler->cmd.publishBuffer))
 	{
-		LOG_ERR("JSON string too long\r\n");
+		LOG_ERR("%s %s JSON string too long\r\n", moduleName, ltHandler->dayParsed);
 		return 1;
 	}
 	if(strlen(topic) > sizeof(buffer))
 	{
-		LOG_ERR("MQTT Topic is too long, get larger buffer!\r\n");
+		LOG_ERR("%s %s MQTT Topic is too long, get larger buffer!\r\n", moduleName, ltHandler->dayParsed);
 		return 1;
 	}
 
@@ -643,7 +634,7 @@ int gsm_mqttPub(char *jsonString, char *topic)
 	strcpy(gHandler->cmd.publishBuffer, jsonString);
 	strcat(gHandler->cmd.publishBuffer, "\032\032");
 	error |= gsm_sendAT();
-	LOG_INF("published:%s\r\n",gHandler->cmd.publishBuffer);
+	LOG_INF("%s %s published:%s\r\n",moduleName, ltHandler->dayParsed, gHandler->cmd.publishBuffer);
 
 	/* clearing the needed message flags and enabling the UART recieve interrupt for the mqtt message reception*/
 	gHandler->cmd.subscribeDataPtr = 0;
