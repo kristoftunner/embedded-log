@@ -296,20 +296,26 @@ enum telsa_chargerStats
     waterTemp,
 };
 
-typedef enum
+typedef enum{
+    TESLA_START,
+    TESLA_STOP
+}tesla_chargerStatus;
+
 typedef struct {
 	uint16_t cellCapacities[80];
 	uint8_t cellTemps[30];
 	uint16_t cellVoltages[80];
     uint16_t chargerStats[15];
+    uint16_t chargingCurrent;
 }tesla_handler;
 
 tesla_handler *tHandler;
 
 void tesla_init(tesla_handler *handler);
-int tesla_readCellVolts(uint16_t *data);
-int tesla_readCellTemps(uint8_t *data);
-int tesla_readCellCapacities(uint16_t *data);
+int tesla_readCellVolts();
+int tesla_readCellTemps();
+int tesla_readCellCapacities();
 int tesla_readChargerStatus(uint16_t *data);
+int tesla_setChargeCurrent(uint16_t data);
 
 #endif /* TESLACTRL_H_ */

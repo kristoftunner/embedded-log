@@ -1,6 +1,50 @@
-#include "json_parser.h"
-#include "mjson.h"
+#include "catchpenny_control.h"
+#include "log.h"
+#include "log_timer.h"
 #include <string.h>
+
+static const char moduleName[] = "catchpenny_control";
+void catchpenny_Init(catchpenny_control *cp)
+{
+    osStatus_t status;
+    cpControl = cp;
+    cpControl->statusPulbishTimerTime = 1000U;
+    status = osTimerStart(cpControl->statusPublishTimer, cpControl->statusPulbishTimerTime);
+}
+
+void catchpenny_Process()
+{
+   /** 1. read and parse the MQTT message from queue
+   *   2. state machine according to MQTT message
+   */
+  osStatus_t status;
+  MQTT_controlMsg mqttMsg;
+  catchpenny_controlMsg cpMsg;
+  if(osTimerIsRunning(cpControl->statusPublishTimer) == 0)
+  {
+    /* read out charger information via RS485->parse->put into the queue->start the timer*/
+    ;
+    if(json_parseCellValuesJson(tHandler,&mqttMsg) != 0)
+    {
+         LOG_ERR("%s %s parsed json data dont fit into buffer!",moduleName, ltHandler->dayParsed);
+    }
+
+    status = osMessageQueuePut(cpControl->publishQueue, &mqttMsg, 0U , 0U);
+
+    osStatus_t status = osTimerStart(cpControl->statusPublishTimer, cpControl->statusPulbishTimerTime);
+   }
+
+   status = osMessageQueueGet(cpControl->subrscribeQueue, &mqttMsg, 0U, 0U);
+   if(status == osOK)
+   {
+        json_parseInputMessage(&mqttMsg, &cpMsg);
+        switch(cpMsg.type){
+            /* TODO: implementation */
+            default:
+                break;
+        }
+   }
+}
 
 int json_parseCellValuesJson(tesla_handler *handler, MQTT_controlMsg *msg)
 {
@@ -110,3 +154,4 @@ void json_parseInputMessage(MQTT_controlMsg *msg, catchpenny_controlMsg *cpMsg)
         ;
     }
 }
+

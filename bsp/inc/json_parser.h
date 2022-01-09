@@ -1,5 +1,6 @@
 #include "teslactrl.h"
 #include "gsm.h"
+#include "catchpenny_control.h"
 
 /**
  * @brief parses the cell voltage and temperature values into json string specified in here <a href="http://mqtt.met3r.com/">link text</a> 
@@ -11,6 +12,6 @@
  * @param handler tesla_handler struct, which stores the information about the tesla charger
  * @param msg MQTT_controlMsg struct, we construct a json message into its buffer
  */
-int json_parseCellValuesJson(tesla_handler *handler, MQTT_controlMsg *msg);
+int catchpenny_parseCellValuesJson(tesla_handler *handler, MQTT_controlMsg *msg);
 
-void json_parseInputMessage(MQTT_controlMsg *msg);
+void catchpenny_parseInputMessage(MQTT_controlMsg *msg, catchpenny_controlMsg *cpMsg);

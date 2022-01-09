@@ -28,7 +28,7 @@ void tesla_init(tesla_handler *handler)
     }
 }
 /* Reading out the 80 cell voltage registers */
-int tesla_readCellVolts(uint16_t *data)
+int tesla_readCellVolts()
 {
     struct Modbus_messageRHRResponse modbusMsg;
     MB_StatusTypeDef modbusStat;
@@ -47,7 +47,7 @@ int tesla_readCellVolts(uint16_t *data)
 }
 
 /* Reading out the 50 cell temperature registers and saving to the input structure*/
-int tesla_readCellTemps(uint8_t *data)
+int tesla_readCellTemps()
 {
     struct Modbus_messageRHRResponse modbusMsg;
     MB_StatusTypeDef modbusStat;
@@ -70,7 +70,7 @@ int tesla_readCellTemps(uint8_t *data)
 }
 
 /* Reading out the 80 cell capacity registers */
-int tesla_readCellCapacities(uint16_t *data)
+int tesla_readCellCapacities()
 {
     struct Modbus_messageRHRResponse modbusMsg;
     MB_StatusTypeDef modbusStat;

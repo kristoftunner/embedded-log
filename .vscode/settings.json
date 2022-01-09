@@ -1,3 +1,7 @@
 {
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "files.associations": {
+        "catchpenny_control.h": "c",
+        "logger.h": "c"
+    }
 }
