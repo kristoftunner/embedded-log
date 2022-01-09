@@ -133,13 +133,13 @@ extern int printk_hex(unsigned char *buff, unsigned int count);
 
 #if defined(LOG_CONFIG_COLOR)
 #define LOG_CALL_TPYE(tag, tag_color, format, ...)	\
-	printk("%s%s%s: " format "%s" LOG_NEWLINE,	\
+	printk("%s%s%s " format "%s" LOG_NEWLINE,	\
 	       tag_color, tag, __func__, ##__VA_ARGS__, LOG_COLOR_OFF)
 
 #define LOG_CALL_TPYE0(color) printk("%s" color)
 #else
 #define LOG_CALL_TPYE(tag, tag_color, format, ...)	\
-	printk("%s%s%s(%d): " format "%s" LOG_NEWLINE,	\
+	printk("%s%s%s(%d) " format "%s" LOG_NEWLINE,	\
 	       LOG_COLOR_NONE, tag, __FILE__, __LINE__, ##__VA_ARGS__, LOG_COLOR_NONE)
 
 #define LOG_CALL_TPYE0(color) { ; }
