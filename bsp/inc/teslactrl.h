@@ -24,6 +24,7 @@
 #define SEC_STAT_PRECHARGE      0x3000
 #define SEC_STAT_EANBLE         0x4000
 #define SEC_STAT_NODATA         0x8888
+
 enum tesla_cellVoltages
 {
   // CMU#1
@@ -295,6 +296,7 @@ enum telsa_chargerStats
     waterTemp,
 };
 
+typedef enum
 typedef struct {
 	uint16_t cellCapacities[80];
 	uint8_t cellTemps[30];

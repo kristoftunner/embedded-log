@@ -1,8 +1,8 @@
 #include <string.h>
 #include <stdint.h>
 #include "gsm.h"
-#include "time.h"
 #include "log.h"
+#include "log_timer.h"
 #include "main.h"
 
 static const char moduleName[] = "gsm";

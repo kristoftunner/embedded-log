@@ -197,7 +197,7 @@ typedef enum{
 typedef struct
 {
 	MQTT_msgType msgFlag;
-	uint8_t jsonString[128];
+	uint8_t jsonString[1024];
 	uint8_t topic[32];
 	/* msgValid flag, indicating for the gsm_mqttProcess that it is a valid publish message*/
 }MQTT_controlMsg;
