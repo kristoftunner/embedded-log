@@ -210,7 +210,7 @@ typedef struct
 	uint8_t writeCmd[64];
 	uint8_t rxBuffer[128];
 	uint8_t txBuffer[128];
-	uint8_t publishBuffer[256];
+	uint8_t publishBuffer[1024];
 	uint8_t subrscribeBuffer[256];
 	uint16_t subscribeDataPtr;
 	uint16_t msgLength;

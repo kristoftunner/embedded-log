@@ -634,7 +634,7 @@ int gsm_mqttPub(char *jsonString, char *topic)
 	strcpy(gHandler->cmd.publishBuffer, jsonString);
 	strcat(gHandler->cmd.publishBuffer, "\032\032");
 	error |= gsm_sendAT();
-	LOG_INF("%s %s published:%s\r\n",moduleName, ltHandler->dayParsed, gHandler->cmd.publishBuffer);
+//	LOG_INF("%s %s published a message\r\n",moduleName, ltHandler->dayParsed);
 
 	/* clearing the needed message flags and enabling the UART recieve interrupt for the mqtt message reception*/
 	gHandler->cmd.subscribeDataPtr = 0;

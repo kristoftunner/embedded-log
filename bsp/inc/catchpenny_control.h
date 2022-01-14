@@ -9,11 +9,22 @@
  *        In the future if the configuration types are updated extend the <json_parseInputMessage>"()" function
  */
 typedef enum {
+    CP_MSG_CONFIG,
+    CP_MSG_PWR_REQUEST,
+    CP_MSG_GET_CELLS,
+    CP_MSG_GET_STATUSUPDATE
+}catchpenny_controlMsgType;
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum{
     MAX_CHARGE_VOLTAGE,
     MIN_CHARGE_VOLTAGE,
     MAX_CHARGE_CURRENT,
     MIN_CHARGE_CURRENT,
-}catchpenny_controlMsgType;
+}catchpenny_controlMsgConfigType;
 
 /**
  * @brief enumeration for catchpenny system overall status 
@@ -32,6 +43,7 @@ typedef enum {
  */
 typedef struct{
     catchpenny_controlMsgType type;
+    catchpenny_controlMsgConfigType configType;
     int value;
 }catchpenny_controlMsg;
 
@@ -57,8 +69,15 @@ typedef struct{
 
 catchpenny_control *cpControl;
 
+/**
+ * @brief Initializer function for the catchpenny controller 
+ * 
+ * @param cp pointer to the catchpenny control block
+ */
+
 void catchpenny_Init(catchpenny_control *cp);
 void catchpenny_Process();
+
 /**
  * @brief parses the cell voltage and temperature values into json string specified in here <a href="http://mqtt.met3r.com/">link text</a> 
  *        working as a interface between teslactrl and gsm functions. Parses the information in the handler struct into the msg buffer
@@ -70,5 +89,12 @@ void catchpenny_Process();
  * @param msg MQTT_controlMsg struct, we construct a json message into its buffer
  */
 int catchpenny_parseCellValuesJson(tesla_handler *handler, MQTT_controlMsg *msg);
+
+/**
+ * @brief function to parse the mqtt input message from the server
+ * 
+ * @param msg pointer to the mqtt message structure
+ * @param cpMsg pointer to the catchpenny control structure into which the message is parsed
+ */
 
 void catchpenny_parseInputMessage(MQTT_controlMsg *msg, catchpenny_controlMsg *cpMsg);

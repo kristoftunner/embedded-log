@@ -1,2 +1,2 @@
 
-/*#define MQTT_EN*/
+#define MQTT_EN

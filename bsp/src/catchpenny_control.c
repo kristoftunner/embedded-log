@@ -4,12 +4,13 @@
 #include <string.h>
 
 static const char moduleName[] = "catchpenny_control";
+
 void catchpenny_Init(catchpenny_control *cp)
 {
-    osStatus_t status;
-    cpControl = cp;
-    cpControl->statusPulbishTimerTime = 1000U;
-    status = osTimerStart(cpControl->statusPublishTimer, cpControl->statusPulbishTimerTime);
+  osStatus_t status;
+  cpControl = cp;
+  cpControl->statusPulbishTimerTime = 1000U;
+  status = osTimerStart(cpControl->statusPublishTimer, cpControl->statusPulbishTimerTime);
 }
 
 void catchpenny_Process()
@@ -20,30 +21,44 @@ void catchpenny_Process()
   osStatus_t status;
   MQTT_controlMsg mqttMsg;
   catchpenny_controlMsg cpMsg;
-  if(osTimerIsRunning(cpControl->statusPublishTimer) == 0)
+  /*if(osTimerIsRunning(cpControl->statusPublishTimer) == 0)
   {
-    /* read out charger information via RS485->parse->put into the queue->start the timer*/
+    // read out charger information via RS485->parse->put into the queue->start the timer
     ;
     if(json_parseCellValuesJson(tHandler,&mqttMsg) != 0)
     {
-         LOG_ERR("%s %s parsed json data dont fit into buffer!",moduleName, ltHandler->dayParsed);
+    	 LOG_ERR("%s %s parsed json data dont fit into buffer!",moduleName, ltHandler->dayParsed);
     }
 
     status = osMessageQueuePut(cpControl->publishQueue, &mqttMsg, 0U , 0U);
 
     osStatus_t status = osTimerStart(cpControl->statusPublishTimer, cpControl->statusPulbishTimerTime);
-   }
+  }*/
 
-   status = osMessageQueueGet(cpControl->subrscribeQueue, &mqttMsg, 0U, 0U);
-   if(status == osOK)
-   {
-        json_parseInputMessage(&mqttMsg, &cpMsg);
-        switch(cpMsg.type){
-            /* TODO: implementation */
-            default:
-                break;
-        }
-   }
+  status = osMessageQueueGet(cpControl->subrscribeQueue, &mqttMsg, 0U, 0U);
+  if(status == osOK)
+  {
+    json_parseInputMessage(&mqttMsg, &cpMsg);
+    switch(cpMsg.type){
+        /* TODO: implementation */
+        case CP_MSG_CONFIG:
+            /* do the configuration */
+            break;
+        case CP_MSG_PWR_REQUEST:
+            /* handle the power request*/
+            break;
+        case CP_MSG_GET_CELLS:
+            break;
+        case CP_MSG_GET_STATUSUPDATE:
+            if(json_parseCellValuesJson(tHandler,&mqttMsg) != 0)
+            {
+            	 LOG_ERR("%s %s parsed json data dont fit into buffer!",moduleName, ltHandler->dayParsed);
+            }
+            break;
+        default:
+            break;
+    }
+  }
 }
 
 int json_parseCellValuesJson(tesla_handler *handler, MQTT_controlMsg *msg)
@@ -104,6 +119,7 @@ int json_parseCellValuesJson(tesla_handler *handler, MQTT_controlMsg *msg)
    currentSize += strlen("]}");
    strcat(msg->jsonString, "]"); 
    strcat(msg->jsonString,"}");
+   strcpy(msg->topic,"status");
 
    if(currentSize > size)
 	   return -1;
@@ -116,42 +132,48 @@ void json_parseInputMessage(MQTT_controlMsg *msg, catchpenny_controlMsg *cpMsg)
     /* parse the input message into a catchpenny control block */
     char buff[20];
     int len = 0;
-    if(mjson_get_string(msg->jsonString, strlen(msg->jsonString),"$.config",buff, sizeof(buff)) != -1)
+    double value;
+    if(strcmp(msg->topic,"control") == 0)
     {
-        double value; //need an array because mjson_get_number copies 64bit of value (lol)
-        if(mjson_get_number(msg->jsonString, strlen(msg->jsonString), "$.value", &value))
+        if(mjson_get_string(msg->jsonString, strlen(msg->jsonString),"$.config",buff, sizeof(buff)) != -1)
         {
-            if(strcmp(buff,"MaxChargeVoltage") == 0)
+            double value; //need an array because mjson_get_number copies 64bit of value (lol)
+            if(mjson_get_number(msg->jsonString, strlen(msg->jsonString), "$.value", &value))
             {
-                cpMsg->type = MAX_CHARGE_VOLTAGE;
-                cpMsg->value = (int)value;
+                if(strcmp(buff,"MaxChargeVoltage") == 0)
+                {
+                    cpMsg->configType = MAX_CHARGE_VOLTAGE;
+                    cpMsg->value = (int)value;
+                }
+                else if(strcmp(buff,"MinChargeVoltage") == 0)
+                {
+                    cpMsg->configType = MIN_CHARGE_VOLTAGE;
+                    cpMsg->value = (int)value;
+                }
+                else if(strcmp(buff,"MaxChargeCurrent") == 0)
+                {
+                    cpMsg->configType = MAX_CHARGE_CURRENT;
+                    cpMsg->value = (int)value;
+                }
+                else if(strcmp(buff,"MinChargeCurrent") == 0)
+                {
+                    cpMsg->configType = MIN_CHARGE_CURRENT;
+                    cpMsg->value = (int)value;
+                }
+                else if(strcmp(buff,"MaxChargeCurrent") == 0)
+                {
+                    cpMsg->configType = MAX_CHARGE_CURRENT;
+                    cpMsg->value = (int)value;
+                }
             }
-            else if(strcmp(buff,"MinChargeVoltage") == 0)
-            {
-                cpMsg->type = MIN_CHARGE_VOLTAGE;
-                cpMsg->value = (int)value;
-            }
-            else if(strcmp(buff,"MaxChargeCurrent") == 0)
-            {
-                cpMsg->type = MAX_CHARGE_CURRENT;
-                cpMsg->value = (int)value;
-            }
-            else if(strcmp(buff,"MinChargeCurrent") == 0)
-            {
-                cpMsg->type = MIN_CHARGE_CURRENT;
-                cpMsg->value = (int)value;
-            }
-            else if(strcmp(buff,"MaxChargeCurrent") == 0)
-            {
-                cpMsg->type = MAX_CHARGE_CURRENT;
-                cpMsg->value = (int)value;
-            }
+            cpMsg->type = CP_MSG_CONFIG;
         }
-    }
-    else if(mjson_get_string(msg->jsonString, strlen(msg->jsonString),"$.state",buff, sizeof(buff)) != -1)
-    {
-        /* TODO: implementation needed*/
-        ;
+        else if(mjson_get_number(msg->jsonString, strlen(msg->jsonString),"$.state",&value) != 0)
+        {
+            /* TODO: implementation needed*/
+            cpMsg->type = CP_MSG_PWR_REQUEST;
+            cpMsg->value = (int)buff;
+        }
     }
 }
 
