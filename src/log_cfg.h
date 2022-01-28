@@ -34,9 +34,9 @@
 #define LOG_ENABLE
 
 #define LOG_CONFIG_LEVEL 4
-#define LOG_CONFIG_COLOR
+/*#define LOG_CONFIG_COLOR*/
 #define LOG_CONFIG_TAGS
-#define LOG_CONFIG_NEWLINE
+/*#define LOG_CONFIG_NEWLINE*/
 
 #endif//LOG_CFG_H
 
